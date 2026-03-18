@@ -1,7 +1,35 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState({ students: 0, teachers: 0, classes: 0, courses: 0 });
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const session = localStorage.getItem('user_session');
+    if (!session) {
+      navigate('/');
+    } else {
+      setUser(JSON.parse(session));
+    }
+
+    const fetchStats = async () => {
+      const { count: studentCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
+      const { count: teacherCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
+      
+      setStats({
+        students: studentCount || 0,
+        teachers: teacherCount || 0,
+        classes: 0, // En attendant les tables
+        courses: 0
+      });
+    };
+    
+    fetchStats();
+  }, [navigate]);
+
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
       {/* Header Section */}
@@ -28,32 +56,31 @@ export default function AdminDashboard() {
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="material-symbols-outlined text-primary dark:text-blue-400">groups</span>
-              <span className="text-xs font-bold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">+4%</span>
+              {stats.students > 0 && <span className="text-[10px] font-bold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">Actif</span>}
             </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Élèves</p>
-            <p className="text-2xl font-bold">1,240</p>
+            <p className="text-2xl font-bold">{stats.students}</p>
           </div>
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="material-symbols-outlined text-primary dark:text-blue-400">person_book</span>
-              <span className="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">Stable</span>
             </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Professeurs</p>
-            <p className="text-2xl font-bold">86</p>
+            <p className="text-2xl font-bold">{stats.teachers}</p>
           </div>
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="material-symbols-outlined text-primary dark:text-blue-400">meeting_room</span>
             </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Classes</p>
-            <p className="text-2xl font-bold">42</p>
+            <p className="text-2xl font-bold">{stats.classes}</p>
           </div>
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="material-symbols-outlined text-primary dark:text-blue-400">library_books</span>
             </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Cours</p>
-            <p className="text-2xl font-bold">158</p>
+            <p className="text-2xl font-bold">{stats.courses}</p>
           </div>
         </section>
 
@@ -71,10 +98,10 @@ export default function AdminDashboard() {
               <span className="material-symbols-outlined mb-2 text-primary">badge</span>
               <span className="text-xs font-medium text-center">Gérer les professeurs</span>
             </Link>
-            <button className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
+            <Link to="/admin-classes" className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
               <span className="material-symbols-outlined mb-2 text-primary">door_open</span>
               <span className="text-xs font-medium text-center">Gérer les classes</span>
-            </button>
+            </Link>
             <Link to="/admin-accounts" className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
               <span className="material-symbols-outlined mb-2 text-primary">key</span>
               <span className="text-xs font-medium text-center">Générer identifiants</span>
@@ -87,55 +114,8 @@ export default function AdminDashboard() {
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary">monitoring</span> Suivi en direct
           </h2>
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <span className="text-sm font-semibold">Statut des activités</span>
-              <span className="text-xs text-primary font-medium cursor-pointer hover:underline">Voir tout</span>
-            </div>
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined">upload_file</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Publications Professeurs</p>
-                    <p className="text-xs text-slate-500">12 nouveaux cours aujourd'hui</p>
-                  </div>
-                </div>
-                <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shrink-0">
-                  <div className="bg-blue-500 h-full w-[85%]"></div>
-                </div>
-              </div>
-              <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined">assignment</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Devoirs Élèves</p>
-                    <p className="text-xs text-slate-500">74% de taux de rendu</p>
-                  </div>
-                </div>
-                <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shrink-0">
-                  <div className="bg-orange-500 h-full w-[74%]"></div>
-                </div>
-              </div>
-              <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined">analytics</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Résultats Scolaires</p>
-                    <p className="text-xs text-slate-500">Moyenne générale: 14.2/20</p>
-                  </div>
-                </div>
-                <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shrink-0">
-                  <div className="bg-emerald-500 h-full w-[60%]"></div>
-                </div>
-              </div>
-            </div>
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-8 text-center">
+            <p className="text-slate-500">Aucune activité récente pour le moment.</p>
           </div>
         </section>
 
@@ -229,11 +209,11 @@ export default function AdminDashboard() {
             <span className="material-symbols-outlined">work</span>
             <span className="text-[10px] font-medium">Gestion</span>
           </Link>
-          <Link className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" to="#">
+          <Link className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" to="/admin-reports">
             <span className="material-symbols-outlined">bar_chart_4_bars</span>
             <span className="text-[10px] font-medium">Rapports</span>
           </Link>
-          <Link className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" to="#">
+          <Link className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" to="/admin-settings">
             <span className="material-symbols-outlined">settings</span>
             <span className="text-[10px] font-medium">Paramètres</span>
           </Link>

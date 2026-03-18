@@ -11,6 +11,11 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminAccountCreation from './pages/AdminAccountCreation';
 import AdminStudents from './pages/AdminStudents';
 import AdminTeachers from './pages/AdminTeachers';
+import AdminClasses from './pages/AdminClasses';
+import AdminReports from './pages/AdminReports';
+import AdminSettings from './pages/AdminSettings';
+import TeacherClasses from './pages/TeacherClasses';
+import Messages from './pages/Messages';
 
 export default function App() {
   return (
@@ -23,6 +28,11 @@ export default function App() {
         <Route path="/admin-accounts" element={<AdminAccountCreation />} />
         <Route path="/admin-students" element={<AdminStudents />} />
         <Route path="/admin-teachers" element={<AdminTeachers />} />
+        <Route path="/admin-classes" element={<AdminClasses />} />
+        <Route path="/admin-reports" element={<AdminReports />} />
+        <Route path="/admin-settings" element={<AdminSettings />} />
+        <Route path="/teacher-classes" element={<TeacherClasses />} />
+        <Route path="/messages" element={<Messages />} />
         <Route path="/assignments" element={<Assignments />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/results" element={<Results />} />
@@ -30,5 +40,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
+
   );
 }

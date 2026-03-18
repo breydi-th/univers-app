@@ -1,7 +1,21 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const session = localStorage.getItem('user_session');
+    if (!session) {
+      navigate('/');
+    } else {
+      setUser(JSON.parse(session));
+    }
+  }, [navigate]);
+
+  if (!user) return null;
+
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
       <div className="flex-1 w-full max-w-7xl mx-auto pb-40 px-4 sm:px-6 lg:px-8">
@@ -15,8 +29,8 @@ export default function Dashboard() {
               />
             </div>
             <div>
-              <h1 className="text-base sm:text-lg font-bold tracking-tight">Bonjour, Jean!</h1>
-              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">Classe: NS1 • Terminale</p>
+              <h1 className="text-base sm:text-lg font-bold tracking-tight">Bonjour, {user?.full_name?.split(' ')[0] || "l'ami"}!</h1>
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">{user?.class_name || "Classe non définie"}</p>
             </div>
           </div>
           <button className="size-8 sm:size-9 rounded-xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors">
@@ -50,36 +64,13 @@ export default function Dashboard() {
               </div>
               <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                 <div className="min-w-[120px] sm:min-w-[150px] bg-white dark:bg-slate-800 p-2.5 sm:p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
-                  <div className="size-7 sm:size-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 mb-1.5">
-                    <span className="material-symbols-outlined text-lg sm:text-xl">functions</span>
+                  <div className="size-7 sm:size-9 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 mb-1.5">
+                    <span className="material-symbols-outlined text-lg sm:text-xl">pending</span>
                   </div>
-                  <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">Maths</p>
-                  <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">85%</p>
-                  <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-green-500">
-                    <span className="material-symbols-outlined text-[10px]">trending_up</span>
-                    +5%
-                  </div>
-                </div>
-                <div className="min-w-[120px] sm:min-w-[150px] bg-white dark:bg-slate-800 p-2.5 sm:p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
-                  <div className="size-7 sm:size-9 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-500 mb-1.5">
-                    <span className="material-symbols-outlined text-lg sm:text-xl">menu_book</span>
-                  </div>
-                  <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">Français</p>
-                  <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">92%</p>
-                  <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-red-500">
-                    <span className="material-symbols-outlined text-[10px]">trending_down</span>
-                    -2%
-                  </div>
-                </div>
-                <div className="min-w-[120px] sm:min-w-[150px] bg-white dark:bg-slate-800 p-2.5 sm:p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
-                  <div className="size-7 sm:size-9 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-500 mb-1.5">
-                    <span className="material-symbols-outlined text-lg sm:text-xl">science</span>
-                  </div>
-                  <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">Science</p>
-                  <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">78%</p>
-                  <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-green-500">
-                    <span className="material-symbols-outlined text-[10px]">trending_up</span>
-                    +10%
+                  <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">Progression globale</p>
+                  <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">0%</p>
+                  <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-slate-400">
+                    En attente de démarrage
                   </div>
                 </div>
               </div>
@@ -94,26 +85,9 @@ export default function Dashboard() {
                 <Link to="/assignments" className="text-primary text-[10px] sm:text-xs font-semibold hover:underline">Voir tout</Link>
               </div>
               <div className="space-y-2">
-                <Link to="/assignments" className="flex items-center gap-2.5 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="size-9 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-lg">quiz</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-[11px] sm:text-xs font-bold truncate">Quiz d'Algèbre</h4>
-                    <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 truncate">Score: 18/20 • Terminée il y a 2h</p>
-                  </div>
-                  <span className="material-symbols-outlined text-slate-400 shrink-0 text-base">chevron_right</span>
-                </Link>
-                <Link to="/assignments" className="flex items-center gap-2.5 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="size-9 shrink-0 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
-                    <span className="material-symbols-outlined text-lg">history_edu</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-[11px] sm:text-xs font-bold truncate">Dissertation de Français</h4>
-                    <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 truncate">À rendre demain • 18:00</p>
-                  </div>
-                  <span className="material-symbols-outlined text-slate-400 shrink-0 text-base">chevron_right</span>
-                </Link>
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm text-center text-slate-500 text-sm">
+                  Aucune activité récente.
+                </div>
               </div>
             </section>
           </div>
