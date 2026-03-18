@@ -32,6 +32,8 @@ export default function Welcome() {
 
       if (data.role === 'teacher') {
         navigate('/teacher-dashboard');
+      } else if (data.role === 'admin') {
+        navigate('/admin-dashboard');
       } else {
         navigate('/dashboard');
       }
