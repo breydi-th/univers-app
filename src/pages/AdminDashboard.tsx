@@ -23,206 +23,179 @@ export default function AdminDashboard() {
     setUser(parsedUser);
 
     const fetchStats = async () => {
-      const { count: studentCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
-      const { count: teacherCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
-      
-      setStats({
-        students: studentCount || 0,
-        teachers: teacherCount || 0,
-        classes: 0, // En attendant les tables
-        courses: 0
-      });
+      try {
+        const { count: studentCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
+        const { count: teacherCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
+        const { count: classCount } = await supabase.from('classes').select('*', { count: 'exact', head: true });
+        
+        setStats({
+          students: studentCount || 0,
+          teachers: teacherCount || 0,
+          classes: classCount || 0,
+          courses: 0
+        });
+      } catch (e) {
+        console.error("Error fetching stats:", e);
+      }
     };
     
     fetchStats();
   }, [navigate]);
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+    <div className="bg-slate-950 font-display text-slate-100 min-h-screen flex flex-col selection:bg-primary/30">
       {/* Header Section */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 z-10">
-        <div className="flex items-center justify-between mb-2 max-w-7xl mx-auto w-full">
+      <header className="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-30 shadow-2xl backdrop-blur-xl bg-slate-900/80">
+        <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <span className="material-symbols-outlined text-primary text-3xl">school</span>
+            <div className="bg-blue-600/20 p-2.5 rounded-2xl border border-blue-500/20 shadow-inner">
+              <span className="material-symbols-outlined text-blue-500 text-3xl">account_balance</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-primary dark:text-blue-400">Institution Univers</h1>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Espace Administration</p>
+              <h1 className="text-xl font-black text-white leading-tight">Institution Univers</h1>
+              <div className="flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Administration</p>
+              </div>
             </div>
           </div>
-          <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="flex size-10 items-center justify-center text-slate-400 hover:bg-slate-800 rounded-xl transition-all">
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+            <div className="size-10 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center">
+               <span className="material-symbols-outlined text-slate-500">person</span>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 p-4 space-y-6 max-w-7xl mx-auto w-full pb-40">
-        {/* Stats Grid */}
+      <main className="flex-1 p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full pb-32">
+        {/* Welcome Text */}
+        <section className="space-y-1">
+          <h2 className="text-2xl md:text-3xl font-black">Bonjour, {user?.full_name?.split(' ')[0] || 'Admin'} 👋</h2>
+          <p className="text-slate-400 font-medium">Voici le résumé de l'activité de l'établissement aujourd'hui.</p>
+        </section>
+
+        {/* Stats Grid (Image 2 Aesthetic) */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="material-symbols-outlined text-primary dark:text-blue-400">groups</span>
-              {stats.students > 0 && <span className="text-[10px] font-bold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">Actif</span>}
+          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl group hover:border-primary/50 transition-all">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                <span className="material-symbols-outlined">groups</span>
+              </div>
+              <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg uppercase tracking-wider">Mise à jour</span>
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Élèves</p>
-            <p className="text-2xl font-bold">{stats.students}</p>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Élèves</p>
+            <p className="text-3xl font-black text-white group-hover:scale-105 transition-transform origin-left">{stats.students}</p>
           </div>
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="material-symbols-outlined text-primary dark:text-blue-400">person_book</span>
+
+          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl group hover:border-emerald-500/50 transition-all">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
+                <span className="material-symbols-outlined">badge</span>
+              </div>
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Professeurs</p>
-            <p className="text-2xl font-bold">{stats.teachers}</p>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Professeurs</p>
+            <p className="text-3xl font-black text-white group-hover:scale-105 transition-transform origin-left">{stats.teachers}</p>
           </div>
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="material-symbols-outlined text-primary dark:text-blue-400">meeting_room</span>
+
+          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl group hover:border-orange-500/50 transition-all">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-orange-500/10 rounded-xl text-orange-500">
+                <span className="material-symbols-outlined">door_open</span>
+              </div>
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Classes</p>
-            <p className="text-2xl font-bold">{stats.classes}</p>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Classes</p>
+            <p className="text-3xl font-black text-white group-hover:scale-105 transition-transform origin-left">{stats.classes}</p>
           </div>
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="material-symbols-outlined text-primary dark:text-blue-400">library_books</span>
+
+          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl group hover:border-purple-500/50 transition-all">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500">
+                <span className="material-symbols-outlined">auto_stories</span>
+              </div>
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Cours</p>
-            <p className="text-2xl font-bold">{stats.courses}</p>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Cours Activés</p>
+            <p className="text-3xl font-black text-white group-hover:scale-105 transition-transform origin-left">{stats.courses}</p>
           </div>
         </section>
 
-        {/* Management Quick Actions */}
+        {/* Management Grid */}
         <section>
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">apps</span> Gestion
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Link to="/admin-students" className="flex flex-col items-center justify-center p-4 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
-              <span className="material-symbols-outlined mb-2">group_add</span>
-              <span className="text-xs font-medium text-center">Gérer les élèves</span>
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-xl font-black flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">touch_app</span> Actions de gestion
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Link to="/admin-students" className="flex flex-col items-center justify-center p-6 bg-blue-600 rounded-3xl shadow-lg shadow-blue-500/20 hover:bg-blue-500 transition-all active:scale-95 border-b-4 border-blue-800">
+              <span className="material-symbols-outlined text-4xl mb-3">person_add</span>
+              <span className="text-sm font-black uppercase tracking-tighter">Inscrire Élèves</span>
             </Link>
-            <Link to="/admin-teachers" className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
-              <span className="material-symbols-outlined mb-2 text-primary">badge</span>
-              <span className="text-xs font-medium text-center">Gérer les professeurs</span>
+            <Link to="/admin-teachers" className="flex flex-col items-center justify-center p-6 bg-slate-900 border border-slate-800 rounded-3xl hover:bg-slate-800 transition-all active:scale-95 shadow-xl border-b-4 border-slate-700">
+              <span className="material-symbols-outlined text-4xl mb-3 text-emerald-500">badge</span>
+              <span className="text-sm font-black uppercase tracking-tighter">Gérer Profs</span>
             </Link>
-            <Link to="/admin-classes" className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
-              <span className="material-symbols-outlined mb-2 text-primary">door_open</span>
-              <span className="text-xs font-medium text-center">Gérer les classes</span>
+            <Link to="/admin-classes" className="flex flex-col items-center justify-center p-6 bg-slate-900 border border-slate-800 rounded-3xl hover:bg-slate-800 transition-all active:scale-95 shadow-xl border-b-4 border-slate-700">
+              <span className="material-symbols-outlined text-4xl mb-3 text-orange-500">meeting_room</span>
+              <span className="text-sm font-black uppercase tracking-tighter">Salles & Classes</span>
             </Link>
-            <Link to="/admin-accounts" className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
-              <span className="material-symbols-outlined mb-2 text-primary">key</span>
-              <span className="text-xs font-medium text-center">Générer identifiants</span>
+            <Link to="/admin-accounts" className="flex flex-col items-center justify-center p-6 bg-slate-900 border border-slate-800 rounded-3xl hover:bg-slate-800 transition-all active:scale-95 shadow-xl border-b-4 border-slate-700">
+              <span className="material-symbols-outlined text-4xl mb-3 text-primary">vpn_key</span>
+              <span className="text-sm font-black uppercase tracking-tighter">Identifiants AI</span>
             </Link>
           </div>
         </section>
 
-        {/* Monitoring Section */}
-        <section>
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">monitoring</span> Suivi en direct
-          </h2>
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-8 text-center">
-            <p className="text-slate-500">Aucune activité récente pour le moment.</p>
-          </div>
-        </section>
-
-        {/* Activity Analytics */}
-        <section>
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">show_chart</span> Activité hebdomadaire
-          </h2>
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-primary"></span>
-                  <span className="text-xs text-slate-500">Élèves</span>
+        {/* Secondary Actions */}
+        <section className="grid md:grid-cols-2 gap-6">
+          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl">
+            <h4 className="text-lg font-black mb-4 flex items-center gap-2">
+               <span className="material-symbols-outlined text-purple-500">assessment</span> Rapports Récents
+            </h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-slate-950 rounded-2xl border border-slate-800/50">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-slate-500">description</span>
+                  <span className="text-xs font-bold">Rapport mensuel Mars</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-blue-300"></span>
-                  <span className="text-xs text-slate-500">Profs</span>
-                </div>
+                <button className="text-primary font-black text-[10px] uppercase">Voir</button>
               </div>
-              <select className="text-xs border border-slate-200 dark:border-slate-700 bg-transparent rounded-lg py-1 px-2 focus:ring-primary outline-none dark:text-slate-300">
-                <option>7 derniers jours</option>
-                <option>30 derniers jours</option>
-              </select>
+              <Link to="/admin-reports" className="block text-center py-2 text-slate-500 text-xs font-bold hover:text-white transition-colors">Voir tous les rapports</Link>
             </div>
-            
-            {/* Simple Chart Placeholder Representation */}
-            <div className="flex items-end justify-between h-40 gap-2 px-2">
-              <div className="flex-1 flex flex-col gap-1 items-center group">
-                <div className="w-full flex items-end gap-1 h-32">
-                  <div className="bg-primary/20 w-1/2 rounded-t h-[40%]"></div>
-                  <div className="bg-primary w-1/2 rounded-t h-[60%]"></div>
-                </div>
-                <span className="text-[10px] text-slate-400">Lun</span>
-              </div>
-              <div className="flex-1 flex flex-col gap-1 items-center group">
-                <div className="w-full flex items-end gap-1 h-32">
-                  <div className="bg-primary/20 w-1/2 rounded-t h-[55%]"></div>
-                  <div className="bg-primary w-1/2 rounded-t h-[80%]"></div>
-                </div>
-                <span className="text-[10px] text-slate-400">Mar</span>
-              </div>
-              <div className="flex-1 flex flex-col gap-1 items-center group">
-                <div className="w-full flex items-end gap-1 h-32">
-                  <div className="bg-primary/20 w-1/2 rounded-t h-[30%]"></div>
-                  <div className="bg-primary w-1/2 rounded-t h-[45%]"></div>
-                </div>
-                <span className="text-[10px] text-slate-400">Mer</span>
-              </div>
-              <div className="flex-1 flex flex-col gap-1 items-center group">
-                <div className="w-full flex items-end gap-1 h-32">
-                  <div className="bg-primary/20 w-1/2 rounded-t h-[60%]"></div>
-                  <div className="bg-primary w-1/2 rounded-t h-[95%]"></div>
-                </div>
-                <span className="text-[10px] text-slate-400">Jeu</span>
-              </div>
-              <div className="flex-1 flex flex-col gap-1 items-center group">
-                <div className="w-full flex items-end gap-1 h-32">
-                  <div className="bg-primary/20 w-1/2 rounded-t h-[50%]"></div>
-                  <div className="bg-primary w-1/2 rounded-t h-[75%]"></div>
-                </div>
-                <span className="text-[10px] text-slate-400">Ven</span>
-              </div>
-              <div className="flex-1 flex flex-col gap-1 items-center group">
-                <div className="w-full flex items-end gap-1 h-32">
-                  <div className="bg-primary/20 w-1/2 rounded-t h-[20%]"></div>
-                  <div className="bg-primary w-1/2 rounded-t h-[30%]"></div>
-                </div>
-                <span className="text-[10px] text-slate-400">Sam</span>
-              </div>
-              <div className="flex-1 flex flex-col gap-1 items-center group">
-                <div className="w-full flex items-end gap-1 h-32">
-                  <div className="bg-primary/20 w-1/2 rounded-t h-[10%]"></div>
-                  <div className="bg-primary w-1/2 rounded-t h-[15%]"></div>
-                </div>
-                <span className="text-[10px] text-slate-400">Dim</span>
-              </div>
+          </div>
+
+          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl">
+             <h4 className="text-lg font-black mb-4 flex items-center gap-2">
+               <span className="material-symbols-outlined text-pink-500">calendar_month</span> Calendrier
+            </h4>
+            <div className="p-8 text-center text-slate-500 bg-slate-950 rounded-2xl border border-slate-800/50">
+               <span className="material-symbols-outlined text-4xl mb-2 opacity-20">event_busy</span>
+               <p className="text-xs font-bold">Aucun événement prévu</p>
             </div>
           </div>
         </section>
       </main>
 
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 z-50">
-        <div className="flex items-center justify-between px-6 pt-4 pb-10 max-w-7xl mx-auto">
-          <Link className="flex flex-col items-center gap-1 text-primary" to="/admin-dashboard">
-            <span className="material-symbols-outlined fill-1">dashboard</span>
-            <span className="text-[10px] font-bold">Dashboard</span>
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 border-t border-slate-800 bg-[#0a0c10]/90 backdrop-blur-2xl px-2 pb-8 pt-3 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
+        <div className="max-w-4xl mx-auto w-full flex justify-around">
+          <Link className="flex flex-1 flex-col items-center gap-1 text-primary" to="/admin-dashboard">
+            <span className="material-symbols-outlined fill-[1]">grid_view</span>
+            <p className="text-[10px] font-black uppercase tracking-tighter">Dashboard</p>
           </Link>
-          <Link className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" to="/admin-accounts">
-            <span className="material-symbols-outlined">work</span>
-            <span className="text-[10px] font-medium">Gestion</span>
+          <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/admin-students">
+            <span className="material-symbols-outlined">business_center</span>
+            <p className="text-[10px] font-black uppercase tracking-tighter">Gestion</p>
           </Link>
-          <Link className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" to="/admin-reports">
-            <span className="material-symbols-outlined">bar_chart_4_bars</span>
-            <span className="text-[10px] font-medium">Rapports</span>
+          <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/admin-reports">
+            <span className="material-symbols-outlined">bar_chart</span>
+            <p className="text-[10px] font-black uppercase tracking-tighter">Rapports</p>
           </Link>
-          <Link className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" to="/admin-settings">
+          <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/admin-settings">
             <span className="material-symbols-outlined">settings</span>
-            <span className="text-[10px] font-medium">Paramètres</span>
+            <p className="text-[10px] font-black uppercase tracking-tighter">Paramètres</p>
           </Link>
         </div>
       </nav>

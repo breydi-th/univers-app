@@ -1,30 +1,75 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function AdminReports() {
   const navigate = useNavigate();
   
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 z-10 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </button>
-        <div>
-          <h1 className="text-xl font-bold">Rapports & Statistiques</h1>
-          <p className="text-xs text-slate-500">Analyse de l'activité de l'établissement</p>
+    <div className="bg-slate-950 font-display text-slate-100 min-h-screen">
+      <header className="sticky top-0 z-50 bg-[#0a0c10] border-b border-slate-800/50 p-4 shadow-2xl backdrop-blur-md">
+        <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
+          <button onClick={() => navigate(-1)} className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 transition-all shadow-lg shadow-blue-600/10">
+            <span className="material-symbols-outlined font-black">arrow_back</span>
+          </button>
+          <div className="flex-1">
+            <h1 className="text-xl font-black text-white leading-tight">Rapports & Stats</h1>
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Analyse de l'établissement</p>
+          </div>
+          <div className="flex gap-2">
+            <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
+              <span className="material-symbols-outlined text-xl">share</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="p-4 sm:p-6 max-w-7xl mx-auto">
-        <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm mt-8">
-          <div className="bg-blue-100 dark:bg-blue-900/30 p-6 rounded-full mb-4">
-            <span className="material-symbols-outlined text-blue-500 text-5xl">analytics</span>
+      <main className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
+        <div className="flex flex-col items-center justify-center p-12 bg-slate-900/50 border border-slate-800 rounded-3xl shadow-xl mt-8 text-center">
+          <div className="bg-purple-500/10 p-6 rounded-full mb-6 border border-purple-500/20 shadow-[0_0_40px_rgba(168,85,247,0.15)] relative">
+            <span className="material-symbols-outlined text-purple-500 text-6xl">analytics</span>
+            <div className="absolute -top-1 -right-1 bg-primary p-1.5 rounded-full border-4 border-slate-950"></div>
           </div>
-          <h2 className="text-xl font-bold mb-2">Pas de données suffisantes</h2>
-          <p className="text-slate-500 text-center max-w-md">Les statistiques globales s'afficheront ici une fois que les élèves et professeurs commenceront à utiliser la plateforme.</p>
+          <h2 className="text-2xl font-black mb-3">Rapports en cours de génération</h2>
+          <p className="text-slate-400 max-w-sm mb-8 leading-relaxed font-medium">
+            Les statistiques s'accumulent au fur et à mesure de l'utilisation. Revenez bientôt pour voir les graphiques de réussite et de présence.
+          </p>
+          
+          <div className="grid grid-cols-2 gap-3 w-full max-w-md">
+            <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 opacity-50 flex items-center gap-3">
+               <span className="material-symbols-outlined text-blue-500">bar_chart</span>
+               <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 w-1/3"></div>
+               </div>
+            </div>
+            <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 opacity-50 flex items-center gap-3">
+               <span className="material-symbols-outlined text-emerald-500">pie_chart</span>
+               <div className="size-8 rounded-full border-4 border-slate-800 border-t-emerald-500"></div>
+            </div>
+          </div>
         </div>
       </main>
+      
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 border-t border-slate-800 bg-[#0a0c10]/90 backdrop-blur-2xl px-2 pb-8 pt-3 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
+        <div className="max-w-4xl mx-auto w-full flex justify-around">
+          <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/admin-dashboard">
+            <span className="material-symbols-outlined">grid_view</span>
+            <p className="text-[10px] font-black uppercase tracking-tighter">Dashboard</p>
+          </Link>
+          <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/admin-students">
+            <span className="material-symbols-outlined">business_center</span>
+            <p className="text-[10px] font-black uppercase tracking-tighter">Gestion</p>
+          </Link>
+          <Link className="flex flex-1 flex-col items-center gap-1 text-primary" to="/admin-reports">
+            <span className="material-symbols-outlined fill-[1]">bar_chart</span>
+            <p className="text-[10px] font-black uppercase tracking-tighter">Rapports</p>
+          </Link>
+          <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/admin-settings">
+            <span className="material-symbols-outlined">settings</span>
+            <p className="text-[10px] font-black uppercase tracking-tighter">Paramètres</p>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 }
