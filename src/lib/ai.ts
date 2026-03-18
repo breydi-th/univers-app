@@ -6,16 +6,21 @@ export interface GeneratedCredentials {
 /**
  * Generates a unique username and a secure password using OpenRouter (GPT).
  */
-export async function generateCredentials(firstName: string, lastName: string, role: 'student' | 'teacher'): Promise<GeneratedCredentials> {
+export async function generateCredentials(firstName: string, lastName: string, role: 'student' | 'teacher' | 'admin'): Promise<GeneratedCredentials> {
   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';
   
-  const prompt = `Generate a unique, short, and professional username and a secure 8-character password for a new ${role} named "${firstName} ${lastName}". 
-  The username should be lowercase, without spaces or special characters (except dots).
-  The password should be easy to type but include letters and numbers.
-  Return the response ONLY as a JSON object with the following structure:
+  let idInstruction = "The username should be lowercase, without spaces or special characters (except dots).";
+  if (role === 'admin') {
+    idInstruction = "The username MUST be a professional email address (e.g. firstname.lastname@univers-ouanaminthe.edu).";
+  }
+
+  const prompt = `Generate a unique, professional identifier and a highly secure password for a new ${role} named "${firstName} ${lastName}". 
+  ${idInstruction}
+  The password MUST be extremely secure, at least 12 characters long, and contain a random mix of uppercase letters, lowercase letters, numbers, and multiple special characters (!@#$%^&*).
+  Return the response ONLY as a JSON object with the following exact structure:
   {
-    "id_user": "username",
-    "password_user": "password"
+    "id_user": "generated_identifier",
+    "password_user": "generated_password"
   }`;
 
   try {
@@ -30,7 +35,7 @@ export async function generateCredentials(firstName: string, lastName: string, r
       body: JSON.stringify({
         model: "openai/gpt-4o-mini", // Very efficient and cost-effective model
         messages: [
-          { role: "system", content: "You are a specialized identity generator for a school administration system." },
+          { role: "system", content: "You are a highly secure identity generator for a school administration system." },
           { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" } // Tell the model to output JSON
@@ -44,9 +49,19 @@ export async function generateCredentials(firstName: string, lastName: string, r
   } catch (error) {
     console.error('Error generating credentials via OpenRouter:', error);
     // Fallback in case of failure
-    const randomSuffix = Math.floor(100 + Math.random() * 900);
-    const username = `${firstName.toLowerCase().charAt(0)}.${lastName.toLowerCase()}${randomSuffix}`.replace(/[^a-z.]/g, '');
-    const password = Math.random().toString(36).slice(-8);
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    
+    let username = `${firstName.toLowerCase().charAt(0)}.${lastName.toLowerCase()}${randomSuffix}`.replace(/[^a-z0-9.]/g, '');
+    if (role === 'admin') {
+      username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@univers-ouanaminthe.edu`.replace(/[^a-z0-9.@-]/g, '');
+    }
+
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+    let password = "";
+    for (let i = 0; i < 14; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
     return {
       id_user: username,
       password_user: password

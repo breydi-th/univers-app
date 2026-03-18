@@ -4,7 +4,7 @@ import { generateCredentials, GeneratedCredentials } from '../lib/ai';
 import { supabase } from '../lib/supabase';
 
 export default function AdminAccountCreation() {
-  const [userType, setUserType] = useState<'student' | 'teacher'>('student');
+  const [userType, setUserType] = useState<'student' | 'teacher' | 'admin'>('student');
   const [fullName, setFullName] = useState('');
   const [className, setClassName] = useState('');
   const [subject, setSubject] = useState('');
@@ -78,7 +78,7 @@ export default function AdminAccountCreation() {
         {/* Selection Section */}
         <section className="space-y-4">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Type d'utilisateur</h3>
-          <div className="flex p-1 bg-slate-200 dark:bg-slate-800 rounded-xl">
+          <div className="flex p-1 bg-slate-200 dark:bg-slate-800 rounded-xl gap-1">
             <label className="flex-1 cursor-pointer">
               <input 
                 className="sr-only peer" 
@@ -101,6 +101,18 @@ export default function AdminAccountCreation() {
               />
               <div className="flex h-12 items-center justify-center rounded-lg text-sm font-medium transition-all peer-checked:bg-white dark:peer-checked:bg-slate-700 peer-checked:text-primary peer-checked:shadow-sm text-slate-600 dark:text-slate-400">
                 Professeur
+              </div>
+            </label>
+            <label className="flex-1 cursor-pointer">
+              <input 
+                className="sr-only peer" 
+                name="user_type" 
+                type="radio" 
+                checked={userType === 'admin'}
+                onChange={() => setUserType('admin')}
+              />
+              <div className="flex h-12 items-center justify-center rounded-lg text-sm font-medium transition-all peer-checked:bg-white dark:peer-checked:bg-slate-700 peer-checked:text-primary peer-checked:shadow-sm text-slate-600 dark:text-slate-400">
+                Admin
               </div>
             </label>
           </div>
