@@ -1,223 +1,200 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+
+interface Teacher {
+  id: string;
+  full_name: string;
+  id_user: string;
+  subject: string;
+  class_name?: string; // We'll mock this for now or join from classes
+}
 
 export default function AdminTeachers() {
+  const navigate = useNavigate();
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, activeClasses: 0 });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    try {
+      setLoading(true);
+      
+      // Fetch teachers
+      const { data: teacherData, error: tError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'teacher');
+      
+      if (tError) throw tError;
+      setTeachers(teacherData || []);
+
+      // Fetch stats
+      const { count: tCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'teacher');
+
+      const { count: cCount } = await supabase
+        .from('classes')
+        .select('*', { count: 'exact', head: true });
+
+      setStats({
+        total: tCount || 0,
+        activeClasses: cCount || 0
+      });
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Voulez-vous vraiment supprimer cet enseignant ?')) return;
+    
+    try {
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) throw error;
+      fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+    <div className="bg-slate-950 font-display text-slate-100 min-h-screen flex flex-col">
       <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
         {/* Header Section */}
-        <div className="flex items-center bg-white dark:bg-slate-900 p-4 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 justify-between">
+        <div className="flex items-center bg-[#0a0c10] p-4 sticky top-0 z-10 border-b border-slate-800/50 justify-between backdrop-blur-md">
           <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
-            <Link to="/admin-dashboard" className="text-primary flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors">
-              <span className="material-symbols-outlined">arrow_back</span>
+            <Link to="/admin-dashboard" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 transition-all shadow-lg shadow-blue-600/10">
+              <span className="material-symbols-outlined font-black">arrow_back</span>
             </Link>
-            <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight flex-1">Gestion des professeurs</h2>
+            <h2 className="text-white text-lg font-black leading-tight tracking-tight flex-1">Gestion des professeurs</h2>
             <div className="flex gap-2">
-              <button className="flex size-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                <span className="material-symbols-outlined">search</span>
+              <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
+                <span className="material-symbols-outlined text-xl">search</span>
               </button>
-              <button className="flex size-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                <span className="material-symbols-outlined">filter_list</span>
+              <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
+                <span className="material-symbols-outlined text-xl">filter_list</span>
               </button>
             </div>
           </div>
         </div>
 
         <div className="flex-1 max-w-7xl mx-auto w-full flex flex-col">
-          {/* Statistics Cards */}
-          <div className="flex flex-wrap gap-4 p-4">
-            <div className="flex min-w-[150px] flex-1 flex-col gap-2 rounded-xl p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+          {/* Statistics Cards (IMAGE 2 Style) */}
+          <div className="grid grid-cols-2 gap-4 p-4">
+            <div className="flex flex-col gap-1 rounded-2xl p-5 bg-slate-900 border border-slate-800 shadow-xl">
               <div className="flex items-center gap-2 text-primary">
-                <span className="material-symbols-outlined text-xl">group</span>
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Professeurs</p>
+                <span className="material-symbols-outlined text-lg">group</span>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Professeurs</p>
               </div>
-              <p className="text-slate-900 dark:text-white text-3xl font-bold">48</p>
+              <p className="text-white text-3xl font-black">{stats.total}</p>
             </div>
-            <div className="flex min-w-[150px] flex-1 flex-col gap-2 rounded-xl p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <div className="flex items-center gap-2 text-emerald-600">
-                <span className="material-symbols-outlined text-xl">school</span>
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Classes Actives</p>
+            <div className="flex flex-col gap-1 rounded-2xl p-5 bg-slate-900 border border-slate-800 shadow-xl">
+              <div className="flex items-center gap-2 text-emerald-500">
+                <span className="material-symbols-outlined text-lg">school</span>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Classes Actives</p>
               </div>
-              <p className="text-slate-900 dark:text-white text-3xl font-bold">156</p>
+              <p className="text-white text-3xl font-black">{stats.activeClasses}</p>
             </div>
           </div>
 
-          {/* Main Action Button */}
+          {/* Main Action Button (IMAGE 2) */}
           <div className="px-4 py-2">
-            <button className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3.5 px-4 rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors active:scale-95">
-              <span className="material-symbols-outlined">person_add</span>
+            <Link 
+              to="/admin-accounts"
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-4 px-4 rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-500 transition-all active:scale-[0.98]"
+            >
+              <span className="material-symbols-outlined font-bold">person_add</span>
               <span>Ajouter un nouveau professeur</span>
-            </button>
+            </Link>
           </div>
 
-          {/* Teacher List Section */}
+          {/* Teacher List */}
           <div className="flex items-center justify-between px-4 pb-3 pt-6">
-            <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">Liste des enseignants</h2>
-            <span className="text-xs font-semibold text-slate-500 bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-full uppercase tracking-wider">Mise à jour à 09:41</span>
+            <h2 className="text-white text-xl font-bold leading-tight tracking-tight">Liste des enseignants</h2>
           </div>
           
-          <div className="flex flex-col gap-3 px-4 pb-32">
-            {/* Teacher Card 1 */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex gap-4 items-start">
-                <div className="relative shrink-0">
-                  <div 
-                    className="bg-slate-200 dark:bg-slate-800 aspect-square rounded-xl h-16 w-16 overflow-hidden border border-slate-100 dark:border-slate-700 bg-cover bg-center" 
-                    title="Portrait of a male teacher in a professional setting" 
-                    style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD0_hawgSdrKSVG9YWFmsmHL8a51oxcOgmvc9Hf_BNd4IYqSaqieWUmth5rfQDwpFnE9EXl2PwpV-3JuZBz0WqgSnXA9tRe7bXzX55OaL04KUCR-NWqrjyO6g-BNSW8Dr1tNjTJYz4j4UuJPQhmNJhU3-X54dmkXJCBV54-ZCHneSTTsFgxtvMZYTorcbyvJHxv7k_1swodRNZFJEj4IrCkb8uaFiAIYZ__OIwb_n78z7WxkEf_sfaWHYq7vJQhlj5rOk5gychPt9iR')" }}
-                  ></div>
-                  <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900"></div>
-                </div>
-                <div className="flex flex-1 flex-col min-w-0">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0 pr-2">
-                      <p className="text-slate-900 dark:text-white text-base font-bold truncate">Jean Dupont</p>
-                      <p className="text-primary text-xs font-semibold uppercase tracking-wider truncate">ID: PROF-2024-001</p>
+          <div className="flex flex-col gap-4 px-4 pb-32">
+            {loading ? (
+               <div className="py-10 text-center text-slate-500">Chargement...</div>
+            ) : teachers.length === 0 ? (
+               <div className="py-10 text-center text-slate-500 italic">Aucun professeur enregistré.</div>
+            ) : teachers.map((teacher) => (
+              <div key={teacher.id} className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl transition-all hover:border-primary/40">
+                <div className="flex gap-5 items-start">
+                  <div className="relative shrink-0">
+                    <div 
+                      className="bg-slate-800 aspect-square rounded-2xl h-16 w-16 overflow-hidden border border-slate-700 bg-cover bg-center shadow-inner" 
+                      style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD0_hawgSdrKSVG9YWFmsmHL8a51oxcOgmvc9Hf_BNd4IYqSaqieWUmth5rfQDwpFnE9EXl2PwpV-3JuZBz0WqgSnXA9tRe7bXzX55OaL04KUCR-NWqrjyO6g-BNSW8Dr1tNjTJYz4j4UuJPQhmNJhU3-X54dmkXJCBV54-ZCHneSTTsFgxtvMZYTorcbyvJHxv7k_1swodRNZFJEj4IrCkb8uaFiAIYZ__OIwb_n78z7WxkEf_sfaWHYq7vJQhlj5rOk5gychPt9iR')" }}
+                    ></div>
+                    <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-emerald-500 rounded-full border-4 border-slate-900"></div>
+                  </div>
+                  <div className="flex flex-1 flex-col min-w-0">
+                    <div className="mb-1">
+                      <p className="text-white text-lg font-black leading-tight">{teacher.full_name}</p>
+                      <p className="text-blue-500 text-[10px] font-black uppercase tracking-widest">ID: {teacher.id_user.toUpperCase()}</p>
                     </div>
-                    <button className="text-slate-400 hover:text-primary transition-colors shrink-0">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-400">
-                      <span className="material-symbols-outlined text-sm">calculate</span> Mathématiques
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-400">
-                      <span className="material-symbols-outlined text-sm">meeting_room</span> Terminale S1
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
-                  <span className="material-symbols-outlined text-primary">edit</span>
-                  <span className="text-[10px] font-bold uppercase">Modifier</span>
-                </button>
-                <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
-                  <span className="material-symbols-outlined text-primary">assignment_ind</span>
-                  <span className="text-[10px] font-bold uppercase">Attribuer</span>
-                </button>
-                <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-600 dark:text-slate-400 group transition-colors">
-                  <span className="material-symbols-outlined text-red-500 group-hover:text-red-600">delete</span>
-                  <span className="text-[10px] font-bold uppercase">Supprimer</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Teacher Card 2 */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex gap-4 items-start">
-                <div className="relative shrink-0">
-                  <div 
-                    className="bg-slate-200 dark:bg-slate-800 aspect-square rounded-xl h-16 w-16 overflow-hidden border border-slate-100 dark:border-slate-700 bg-cover bg-center" 
-                    title="Portrait of a female teacher smiling" 
-                    style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCu0Mjy-2R-TgQPdBk9lNUvH4lbga_3eiik7OSvCF8GwDqLsEkJ3JJFfTF61zPZC_wC1mTd_pdhdHNbMeRzh60sum2HyaYQ_6-NeEoD7XBocchQMjqdqXWSaEbatreVWpV0WUFDUyN0AiyspnY5BvSi7ycEozmNdO-lrbGM7-PkTh7ALWd0VvgSRSdw6EqGnlV9CMUJgn-lpUh88-ssLPlpoxN3R86DkQvPHuDwMHqdHqUGINzoBVvYSzOU49zbCET7FObqg2O0vrY1')" }}
-                  ></div>
-                  <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900"></div>
-                </div>
-                <div className="flex flex-1 flex-col min-w-0">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0 pr-2">
-                      <p className="text-slate-900 dark:text-white text-base font-bold truncate">Marie Laurent</p>
-                      <p className="text-primary text-xs font-semibold uppercase tracking-wider truncate">ID: PROF-2024-042</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                       <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800/80 border border-slate-700/50 px-3 py-1.5 text-xs font-bold text-slate-300">
+                        <span className="material-symbols-outlined text-sm text-primary">calculate</span> {teacher.subject || "Sans matière"}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800/80 border border-slate-700/50 px-3 py-1.5 text-xs font-bold text-slate-300">
+                        <span className="material-symbols-outlined text-sm text-primary">door_open</span> {teacher.class_name || "Non assigné"}
+                      </span>
                     </div>
-                    <button className="text-slate-400 hover:text-primary transition-colors shrink-0">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-400">
-                      <span className="material-symbols-outlined text-sm">history_edu</span> Histoire-Géo
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-400">
-                      Ns2
-                    </span>
                   </div>
                 </div>
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
-                  <span className="material-symbols-outlined text-primary">edit</span>
-                  <span className="text-[10px] font-bold uppercase">Modifier</span>
-                </button>
-                <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
-                  <span className="material-symbols-outlined text-primary">assignment_ind</span>
-                  <span className="text-[10px] font-bold uppercase">Attribuer</span>
-                </button>
-                <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-600 dark:text-slate-400 group transition-colors">
-                  <span className="material-symbols-outlined text-red-500 group-hover:text-red-600">delete</span>
-                  <span className="text-[10px] font-bold uppercase">Supprimer</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Teacher Card 3 */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm opacity-90 hover:opacity-100 transition-all hover:shadow-md">
-              <div className="flex gap-4 items-start">
-                <div className="relative shrink-0">
-                  <div 
-                    className="bg-slate-200 dark:bg-slate-800 aspect-square rounded-xl h-16 w-16 overflow-hidden border border-slate-100 dark:border-slate-700 bg-cover bg-center" 
-                    title="Portrait of a young teacher" 
-                    style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAFEfiiYwdHd3CijjXuHWTDoyxRVqXXpx-6qpnxo_uh524da7kLagws5USp-8hYqfS8RE2I38fSf7xQTkAR-LRfjZW7ZayQuzQ1j61BJ2LdF-6LtdfjxGFOkvc2YdoR6fKkiTQNXhNjUfc1sYB24JGBCtOojndWd_uJg9CBBBfY4Zrf_zY57wLD-9mrs80SoohyVXfu4evp36HZExusqtFoVuzbwLHXqSSWx--V8B9zYGkEsD1L5lsbAb6tFGLiXYmQhtJZsJvmOa_M')" }}
-                  ></div>
-                  <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-slate-300 rounded-full border-2 border-white dark:border-slate-900"></div>
-                </div>
-                <div className="flex flex-1 flex-col min-w-0">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0 pr-2">
-                      <p className="text-slate-900 dark:text-white text-base font-bold truncate">Ahmed Benali</p>
-                      <p className="text-primary text-xs font-semibold uppercase tracking-wider truncate">ID: PROF-2024-015</p>
-                    </div>
-                    <button className="text-slate-400 hover:text-primary transition-colors shrink-0">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-400">
-                      <span className="material-symbols-outlined text-sm">science</span> Physique-Chimie
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-400">
-                      <span className="material-symbols-outlined text-sm">meeting_room</span> Terminale S2
-                    </span>
-                  </div>
+                
+                {/* Actions Grid (IMAGE 3 Style) */}
+                <div className="mt-5 grid grid-cols-3 gap-2 pt-4 border-t border-slate-800">
+                  <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl hover:bg-slate-800 text-slate-400 group transition-all">
+                    <span className="material-symbols-outlined text-blue-500 group-hover:scale-110 transition-transform">edit</span>
+                    <span className="text-[9px] font-black uppercase tracking-tighter">Modifier</span>
+                  </button>
+                  <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl hover:bg-slate-800 text-slate-400 group transition-all">
+                    <span className="material-symbols-outlined text-blue-400 group-hover:scale-110 transition-transform">assignment_ind</span>
+                    <span className="text-[9px] font-black uppercase tracking-tighter">Attribuer</span>
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(teacher.id)}
+                    className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl hover:bg-red-500/10 text-slate-400 group transition-all"
+                  >
+                    <span className="material-symbols-outlined text-red-500 group-hover:scale-110 transition-transform">delete</span>
+                    <span className="text-[9px] font-black uppercase tracking-tighter">Supprimer</span>
+                  </button>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
-                  <span className="material-symbols-outlined text-primary">edit</span>
-                  <span className="text-[10px] font-bold uppercase">Modifier</span>
-                </button>
-                <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
-                  <span className="material-symbols-outlined text-primary">assignment_ind</span>
-                  <span className="text-[10px] font-bold uppercase">Attribuer</span>
-                </button>
-                <button className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-600 dark:text-slate-400 group transition-colors">
-                  <span className="material-symbols-outlined text-red-500 group-hover:text-red-600">delete</span>
-                  <span className="text-[10px] font-bold uppercase">Supprimer</span>
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Bottom Navigation Bar */}
-        <nav className="fixed bottom-0 left-0 right-0 flex border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2 pb-8 pt-3 z-20">
-          <div className="max-w-7xl mx-auto w-full flex justify-around">
-            <Link className="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary transition-colors" to="/admin-dashboard">
-              <span className="material-symbols-outlined">dashboard</span>
-              <p className="text-[10px] font-medium leading-normal tracking-wide uppercase">Tableau de bord</p>
+        {/* Bottom Navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 border-t border-slate-800 bg-[#0a0c10]/90 backdrop-blur-2xl px-2 pb-8 pt-3 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
+          <div className="max-w-4xl mx-auto w-full flex justify-around">
+            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/admin-dashboard">
+              <span className="material-symbols-outlined">grid_view</span>
+              <p className="text-[10px] font-black uppercase tracking-tighter">Dashboard</p>
             </Link>
-            <Link className="flex flex-1 flex-col items-center justify-center gap-1 text-primary" to="/admin-teachers">
-              <span className="material-symbols-outlined fill-1">group</span>
-              <p className="text-[10px] font-bold leading-normal tracking-wide uppercase">Profs</p>
+            <Link className="flex flex-1 flex-col items-center gap-1 text-primary" to="/admin-teachers">
+              <span className="material-symbols-outlined fill-[1]">business_center</span>
+              <p className="text-[10px] font-black uppercase tracking-tighter">Gestion</p>
             </Link>
-            <Link className="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary transition-colors" to="#">
-              <span className="material-symbols-outlined">school</span>
-              <p className="text-[10px] font-medium leading-normal tracking-wide uppercase">Classes</p>
+            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/admin-reports">
+              <span className="material-symbols-outlined">bar_chart</span>
+              <p className="text-[10px] font-black uppercase tracking-tighter">Rapports</p>
             </Link>
-            <Link className="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary transition-colors" to="#">
+            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/admin-settings">
               <span className="material-symbols-outlined">settings</span>
-              <p className="text-[10px] font-medium leading-normal tracking-wide uppercase">Paramètres</p>
+              <p className="text-[10px] font-black uppercase tracking-tighter">Paramètres</p>
             </Link>
           </div>
         </nav>
