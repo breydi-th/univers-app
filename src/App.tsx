@@ -17,6 +17,11 @@ import AdminSettings from './pages/AdminSettings';
 import TeacherClasses from './pages/TeacherClasses';
 import Messages from './pages/Messages';
 
+import AdminSchoolSettings from './pages/AdminSchoolSettings';
+import AdminAcademicSettings from './pages/AdminAcademicSettings';
+import AdminSecuritySettings from './pages/AdminSecuritySettings';
+import AdminNotificationSettings from './pages/AdminNotificationSettings';
+
 export default function App() {
   return (
     <Router>
@@ -31,6 +36,10 @@ export default function App() {
         <Route path="/admin-classes" element={<AdminClasses />} />
         <Route path="/admin-reports" element={<AdminReports />} />
         <Route path="/admin-settings" element={<AdminSettings />} />
+        <Route path="/admin-settings/school" element={<AdminSchoolSettings />} />
+        <Route path="/admin-settings/academic" element={<AdminAcademicSettings />} />
+        <Route path="/admin-settings/security" element={<AdminSecuritySettings />} />
+        <Route path="/admin-settings/notifications" element={<AdminNotificationSettings />} />
         <Route path="/teacher-classes" element={<TeacherClasses />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/assignments" element={<Assignments />} />
@@ -40,6 +49,5 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
-
   );
 }

@@ -4,10 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 export default function AdminSettings() {
   const navigate = useNavigate();
   
-  const handleAction = (title: string) => {
-    alert(`Configuration de "${title}" sera disponible dans la prochaine mise à jour.`);
-  };
-
   return (
     <div className="bg-slate-950 font-display text-slate-100 min-h-screen">
       <header className="sticky top-0 z-50 bg-[#0a0c10] border-b border-slate-800/50 p-4 shadow-2xl backdrop-blur-md">
@@ -28,8 +24,8 @@ export default function AdminSettings() {
       </header>
 
       <main className="p-4 sm:p-6 max-w-4xl mx-auto space-y-4">
-        <div 
-          onClick={() => handleAction("Informations de l'école")}
+        <Link 
+          to="/admin-settings/school"
           className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex items-center gap-4 hover:border-blue-500/30 transition-all cursor-pointer group active:scale-[0.98]"
         >
           <div className="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
@@ -40,10 +36,10 @@ export default function AdminSettings() {
             <p className="text-xs text-slate-500">Nom, logo, adresse et contact</p>
           </div>
           <span className="material-symbols-outlined text-slate-700">chevron_right</span>
-        </div>
+        </Link>
 
-        <div 
-          onClick={() => handleAction("Année Académique")}
+        <Link 
+          to="/admin-settings/academic"
           className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex items-center gap-4 hover:border-purple-500/30 transition-all cursor-pointer group active:scale-[0.98]"
         >
           <div className="size-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
@@ -54,10 +50,10 @@ export default function AdminSettings() {
             <p className="text-xs text-slate-500">Périodes, trimestres et vacances</p>
           </div>
           <span className="material-symbols-outlined text-slate-700">chevron_right</span>
-        </div>
+        </Link>
 
-        <div 
-          onClick={() => handleAction("Sécurité & Rôles")}
+        <Link 
+          to="/admin-settings/security"
           className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex items-center gap-4 hover:border-emerald-500/30 transition-all cursor-pointer group active:scale-[0.98]"
         >
           <div className="size-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
@@ -68,10 +64,10 @@ export default function AdminSettings() {
             <p className="text-xs text-slate-500">Permissions et accès administrateurs</p>
           </div>
           <span className="material-symbols-outlined text-slate-700">chevron_right</span>
-        </div>
+        </Link>
 
-        <div 
-          onClick={() => handleAction("Notifications")}
+        <Link 
+          to="/admin-settings/notifications"
           className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex items-center gap-4 hover:border-red-500/30 transition-all cursor-pointer group active:scale-[0.98]"
         >
           <div className="size-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
@@ -82,7 +78,7 @@ export default function AdminSettings() {
             <p className="text-xs text-slate-500">Alertes SMS, Email et Push</p>
           </div>
           <span className="material-symbols-outlined text-slate-700">chevron_right</span>
-        </div>
+        </Link>
 
         <div className="pt-8 text-center">
             <p className="text-[10px] text-slate-700 font-bold uppercase tracking-[0.2em] mb-4">Version 1.0.4 • © 2026 Univers-App</p>
