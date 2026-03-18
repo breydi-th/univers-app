@@ -79,24 +79,8 @@ export default function Welcome() {
               <span className="text-blue-300">Univers App</span>
             </h2>
             <p className="text-slate-300 text-base leading-relaxed max-w-md">
-              La plateforme éducative complète pour les élèves, professeurs et administrateurs.
+              La plateforme éducative complète pour les élèves, professeurs et administrateurs du collège <span className="text-blue-300 font-semibold">Univers de Ouanaminthe</span>.
             </p>
-            <div className="flex gap-6 mt-8">
-              <div className="text-center">
-                <p className="text-white text-2xl font-bold">500+</p>
-                <p className="text-slate-400 text-xs">Élèves</p>
-              </div>
-              <div className="w-px bg-white/20" />
-              <div className="text-center">
-                <p className="text-white text-2xl font-bold">50+</p>
-                <p className="text-slate-400 text-xs">Professeurs</p>
-              </div>
-              <div className="w-px bg-white/20" />
-              <div className="text-center">
-                <p className="text-white text-2xl font-bold">7</p>
-                <p className="text-slate-400 text-xs">Niveaux</p>
-              </div>
-            </div>
           </div>
 
           {/* Mini tagline mobile — visible seulement sur mobile */}
