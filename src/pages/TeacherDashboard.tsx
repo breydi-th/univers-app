@@ -9,9 +9,16 @@ export default function TeacherDashboard() {
     const session = localStorage.getItem('user_session');
     if (!session) {
       navigate('/');
-    } else {
-      setUser(JSON.parse(session));
+      return;
     }
+    
+    const parsedUser = JSON.parse(session);
+    if (parsedUser.role !== 'teacher') {
+      navigate('/');
+      return;
+    }
+    
+    setUser(parsedUser);
   }, [navigate]);
 
   if (!user) return null;

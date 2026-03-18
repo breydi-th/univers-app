@@ -11,9 +11,16 @@ export default function AdminDashboard() {
     const session = localStorage.getItem('user_session');
     if (!session) {
       navigate('/');
-    } else {
-      setUser(JSON.parse(session));
+      return;
     }
+    
+    const parsedUser = JSON.parse(session);
+    if (parsedUser.role !== 'admin') {
+      navigate('/');
+      return;
+    }
+    
+    setUser(parsedUser);
 
     const fetchStats = async () => {
       const { count: studentCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
