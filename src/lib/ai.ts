@@ -11,7 +11,7 @@ export async function generateCredentials(firstName: string, lastName: string, r
   
   let idInstruction = "The username should be lowercase, without spaces or special characters (except dots).";
   if (role === 'admin') {
-    idInstruction = "The username MUST be a professional email address (e.g. firstname.lastname@univers-ouanaminthe.edu).";
+    idInstruction = "The username MUST be a professional but UNPREDICTABLE email address (e.g. firstname.lastname.x4y9@univers-ouanaminthe.edu). It MUST include a random 4-character alphanumeric suffix before the @ to prevent guessing.";
   }
 
   const prompt = `Generate a unique, professional identifier and a highly secure password for a new ${role} named "${firstName} ${lastName}". 
@@ -50,10 +50,11 @@ export async function generateCredentials(firstName: string, lastName: string, r
     console.error('Error generating credentials via OpenRouter:', error);
     // Fallback in case of failure
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const nanoId = Math.random().toString(36).substring(2, 6);
     
     let username = `${firstName.toLowerCase().charAt(0)}.${lastName.toLowerCase()}${randomSuffix}`.replace(/[^a-z0-9.]/g, '');
     if (role === 'admin') {
-      username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@univers-ouanaminthe.edu`.replace(/[^a-z0-9.@-]/g, '');
+      username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${nanoId}@univers-ouanaminthe.edu`.replace(/[^a-z0-9.@-]/g, '');
     }
 
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
