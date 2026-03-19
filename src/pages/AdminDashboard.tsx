@@ -8,6 +8,23 @@ export default function AdminDashboard() {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
+  const fetchStats = async () => {
+    try {
+      const { count: studentCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
+      const { count: teacherCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
+      const { count: classCount } = await supabase.from('classes').select('*', { count: 'exact', head: true });
+      
+      setStats({
+        students: studentCount || 0,
+        teachers: teacherCount || 0,
+        classes: classCount || 0,
+        courses: 0 // Placeholder
+      });
+    } catch (e) {
+      console.error("Error fetching stats:", e);
+    }
+  };
+
   useEffect(() => {
     const session = localStorage.getItem('user_session');
     if (!session) {
@@ -22,25 +39,29 @@ export default function AdminDashboard() {
     }
     
     setUser(parsedUser);
-
-    const fetchStats = async () => {
-      try {
-        const { count: studentCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
-        const { count: teacherCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
-        const { count: classCount } = await supabase.from('classes').select('*', { count: 'exact', head: true });
-        
-        setStats({
-          students: studentCount || 0,
-          teachers: teacherCount || 0,
-          classes: classCount || 0,
-          courses: 0
-        });
-      } catch (e) {
-        console.error("Error fetching stats:", e);
-      }
-    };
-    
     fetchStats();
+
+    // REALTIME SUBSCRIPTIONS
+    // Listen for any changes in classes table
+    const classesSub = supabase
+      .channel('classes-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'classes' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    // Listen for any changes in profiles table (students/teachers)
+    const profilesSub = supabase
+      .channel('profiles-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(classesSub);
+      supabase.removeChannel(profilesSub);
+    };
   }, [navigate]);
 
   return (
@@ -57,14 +78,14 @@ export default function AdminDashboard() {
           <p className="text-slate-400 font-medium">Voici le résumé de l'activité de l'établissement aujourd'hui.</p>
         </section>
 
-        {/* Stats Grid (Image 2 Aesthetic) */}
+        {/* Stats Grid */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl group hover:border-primary/50 transition-all">
             <div className="flex items-center justify-between mb-4">
               <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
                 <span className="material-symbols-outlined">groups</span>
               </div>
-              <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg uppercase tracking-wider">Mise à jour</span>
+              <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg uppercase tracking-wider animate-pulse">Live</span>
             </div>
             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Élèves</p>
             <p className="text-3xl font-black text-white group-hover:scale-105 transition-transform origin-left">{stats.students}</p>
@@ -75,6 +96,7 @@ export default function AdminDashboard() {
               <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
                 <span className="material-symbols-outlined">badge</span>
               </div>
+              <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg uppercase tracking-wider animate-pulse">Live</span>
             </div>
             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Professeurs</p>
             <p className="text-3xl font-black text-white group-hover:scale-105 transition-transform origin-left">{stats.teachers}</p>
@@ -85,6 +107,7 @@ export default function AdminDashboard() {
               <div className="p-2 bg-orange-500/10 rounded-xl text-orange-500">
                 <span className="material-symbols-outlined">door_open</span>
               </div>
+              <span className="text-[10px] font-black text-orange-500 bg-orange-500/10 px-2 py-1 rounded-lg uppercase tracking-wider animate-pulse">Live</span>
             </div>
             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Classes</p>
             <p className="text-3xl font-black text-white group-hover:scale-105 transition-transform origin-left">{stats.classes}</p>
@@ -128,7 +151,6 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        {/* Secondary Actions */}
         <section className="grid md:grid-cols-2 gap-6">
           <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl">
             <h4 className="text-lg font-black mb-4 flex items-center gap-2">
