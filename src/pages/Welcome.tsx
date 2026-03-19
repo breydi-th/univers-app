@@ -102,11 +102,11 @@ export default function Welcome() {
 
           <div className="hidden lg:block">
             <h2 className="text-white text-4xl xl:text-5xl font-black leading-tight mb-4 uppercase tracking-tighter">
-              Votre Avenir<br />
-              Commence <span className="text-blue-400">Ici.</span>
+              Bienvenue sur<br />
+              <span className="text-blue-400">Univers App</span>
             </h2>
             <p className="text-slate-300 text-base leading-relaxed max-w-md font-bold italic opacity-80 border-l-2 border-blue-500 pl-4">
-              La plateforme complète pour l'excellence académique. Connectez-vous pour accéder à vos cours, résultats et outils de gestion.
+              La plateforme numérique dédiée aux étudiants, professeurs et administration de l'institution Univers Ouanaminthe.
             </p>
           </div>
 
