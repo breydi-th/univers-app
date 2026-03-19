@@ -108,27 +108,34 @@ export default function Profile() {
           {isEditingPhoto && (
             <div className="w-full space-y-3 p-5 bg-slate-950 rounded-3xl border border-slate-800 animate-in zoom-in-95 duration-300 shadow-3xl">
               <div className="flex items-center justify-between mb-1">
-                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-1">Lien de la photo (Stockage Local)</label>
+                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-1">Sélectionner une photo</label>
                  <span className="text-[8px] font-bold text-primary uppercase bg-primary/10 px-2 py-0.5 rounded-full">Privé</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-3">
                 <input 
-                  type="text"
-                  placeholder="https://exemple.com/image.jpg"
-                  className="flex-1 bg-slate-900 border border-slate-800 p-4 rounded-2xl text-xs font-bold outline-none focus:border-primary transition-all text-white placeholder:text-slate-700"
-                  value={newAvatarUrl}
-                  onChange={(e) => setNewAvatarUrl(e.target.value)}
-                  onKeyUp={(e) => e.key === 'Enter' && handleSavePhoto()}
+                  type="file"
+                  accept="image/*"
+                  className="w-full bg-slate-900 border border-slate-800 p-3 rounded-2xl text-xs font-bold outline-none focus:border-primary transition-all text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setNewAvatarUrl(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
                 />
                 <button 
                   onClick={handleSavePhoto}
                   disabled={isSaving}
-                  className="bg-primary hover:bg-primary/80 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50 transition-all flex items-center justify-center min-w-[60px]"
+                  className="bg-primary hover:bg-primary/80 py-4 w-full rounded-[1.25rem] font-black text-[10px] uppercase tracking-widest disabled:opacity-50 transition-all flex items-center justify-center"
                 >
-                  {isSaving ? <span className="material-symbols-outlined animate-spin text-sm">cached</span> : 'OK'}
+                  {isSaving ? <span className="material-symbols-outlined animate-spin text-sm">cached</span> : 'ENREGISTRER LA PHOTO'}
                 </button>
               </div>
-              <p className="text-[8px] text-slate-600 font-bold uppercase tracking-tighter px-1">* Cette image ne sera visible que sur cet appareil.</p>
+              <p className="text-[8px] text-slate-600 font-bold uppercase tracking-tighter px-1">* Cette image sera stockée localement sur cet appareil.</p>
             </div>
           )}
         </div>
