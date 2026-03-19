@@ -17,13 +17,32 @@ export default function AdminClasses() {
   const [newName, setNewName] = useState('');
   const [newLevel, setNewLevel] = useState('');
 
+  const [schoolId, setSchoolId] = useState<string | null>(null);
+
   useEffect(() => {
-    fetchClasses();
+    fetchInitialData();
   }, []);
+
+  async function fetchInitialData() {
+    try {
+      setLoading(true);
+      // 1. Fetch school ID (required for some DB schemas)
+      const { data: schools } = await supabase.from('school_settings').select('id').limit(1);
+      if (schools && schools[0]) {
+        setSchoolId(schools[0].id);
+      }
+      
+      // 2. Fetch classes
+      await fetchClasses();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function fetchClasses() {
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('classes')
         .select('*')
@@ -33,26 +52,29 @@ export default function AdminClasses() {
       setClasses(data || []);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   }
 
   async function createClass() {
     if (!newName || !newLevel) return;
     try {
+      const insertData: any = { name: `${newName} (${newLevel})` };
+      if (schoolId) {
+        insertData.school_id = schoolId;
+      }
+
       const { error } = await supabase
         .from('classes')
-        .insert([{ name: `${newName} (${newLevel})` }]);
+        .insert([insertData]);
       
       if (error) throw error;
       setShowModal(false);
       setNewName('');
       setNewLevel('');
       fetchClasses();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Erreur lors de la création');
+      alert('Erreur: ' + (err.message || 'Problème de connexion à la base de données'));
     }
   }
 
