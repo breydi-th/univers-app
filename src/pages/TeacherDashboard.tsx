@@ -118,21 +118,21 @@ export default function TeacherDashboard() {
         <section>
           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 px-1">Accès Rapides</h3>
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex flex-col items-center justify-center p-8 bg-slate-900 rounded-[2rem] border border-slate-800 shadow-xl active:scale-95 transition-transform">
+            <Link to="/teacher-courses" className="flex flex-col items-center justify-center p-8 bg-slate-900 rounded-[2rem] border border-slate-800 shadow-xl active:scale-95 transition-transform">
               <span className="material-symbols-outlined text-4xl mb-4 text-blue-500">video_call</span>
-              <span className="text-[10px] font-black uppercase tracking-widest">Cours en direct</span>
-            </button>
-            <button className="flex flex-col items-center justify-center p-8 bg-slate-900 rounded-[2rem] border border-slate-800 shadow-xl active:scale-95 transition-transform">
+              <span className="text-[10px] font-black uppercase tracking-widest text-center mt-2">Cours en direct</span>
+            </Link>
+            <Link to="/teacher-assignments" className="flex flex-col items-center justify-center p-8 bg-slate-900 rounded-[2rem] border border-slate-800 shadow-xl active:scale-95 transition-transform">
               <span className="material-symbols-outlined text-4xl mb-4 text-orange-500">assignment</span>
-              <span className="text-[10px] font-black uppercase tracking-widest">Devoirs</span>
-            </button>
+              <span className="text-[10px] font-black uppercase tracking-widest mt-2">Devoirs</span>
+            </Link>
             <Link to="/teacher-classes" className="flex flex-col items-center justify-center p-8 bg-slate-900 rounded-[2rem] border border-slate-800 shadow-xl active:scale-95 transition-transform">
               <span className="material-symbols-outlined text-4xl mb-4 text-emerald-500">groups</span>
-              <span className="text-[10px] font-black uppercase tracking-widest">Mes Classes</span>
+              <span className="text-[10px] font-black uppercase tracking-widest mt-2">Mes Classes</span>
             </Link>
             <Link to="/profile" className="flex flex-col items-center justify-center p-8 bg-slate-900 rounded-[2rem] border border-slate-800 shadow-xl active:scale-95 transition-transform">
               <span className="material-symbols-outlined text-4xl mb-4 text-purple-500">account_circle</span>
-              <span className="text-[10px] font-black uppercase tracking-widest">Paramètres</span>
+              <span className="text-[10px] font-black uppercase tracking-widest mt-2">Paramètres</span>
             </Link>
           </div>
         </section>

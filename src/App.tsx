@@ -7,6 +7,8 @@ import Courses from './pages/Courses';
 import Results from './pages/Results';
 import Profile from './pages/Profile';
 import TeacherDashboard from './pages/TeacherDashboard';
+import TeacherCourses from './pages/TeacherCourses';
+import TeacherAssignments from './pages/TeacherAssignments';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminAccountCreation from './pages/AdminAccountCreation';
 import AdminStudents from './pages/AdminStudents';
@@ -41,6 +43,8 @@ export default function App() {
         <Route path="/" element={<Welcome />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+        <Route path="/teacher-courses" element={<TeacherCourses />} />
+        <Route path="/teacher-assignments" element={<TeacherAssignments />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-accounts" element={<AdminAccountCreation />} />
         <Route path="/admin-students" element={<AdminStudents />} />
