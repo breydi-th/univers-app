@@ -13,24 +13,33 @@ interface Student {
 export default function AdminStudents() {
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editModal, setEditModal] = useState<Student | null>(null);
 
   useEffect(() => {
-    fetchStudents();
+    fetchData();
   }, []);
 
-  async function fetchStudents() {
+  async function fetchData() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch students
+      const { data: studentData, error: sError } = await supabase
         .from('profiles')
         .select('*')
         .eq('role', 'student')
         .order('full_name');
       
-      if (error) throw error;
-      setStudents(data || []);
+      if (sError) throw sError;
+      setStudents(studentData || []);
+
+      // Fetch classes for selection
+      const { data: classData } = await supabase.from('classes').select('*').order('name');
+      setClasses(classData || []);
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -43,7 +52,27 @@ export default function AdminStudents() {
     try {
       const { error } = await supabase.from('profiles').delete().eq('id', id);
       if (error) throw error;
-      fetchStudents();
+      fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!editModal) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          full_name: editModal.full_name,
+          class_name: editModal.class_name 
+        })
+        .eq('id', editModal.id);
+      
+      if (error) throw error;
+      setEditModal(null);
+      fetchData();
+      alert("Élève mis à jour !");
     } catch (err: any) {
       alert(err.message);
     }
@@ -61,16 +90,6 @@ export default function AdminStudents() {
         subtitle={`${students.length} Inscrits`}
         showBack={true}
         backTo="/admin-dashboard"
-        rightActions={
-          <div className="flex gap-2">
-            <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
-              <span className="material-symbols-outlined text-xl">search</span>
-            </button>
-            <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
-              <span className="material-symbols-outlined text-xl">filter_list</span>
-            </button>
-          </div>
-        }
       />
 
       <div className="flex-1 max-w-4xl mx-auto w-full flex flex-col">
@@ -99,30 +118,39 @@ export default function AdminStudents() {
           ) : (
             <div className="flex flex-col gap-4">
               {filteredStudents.map((student) => (
-                <div key={student.id} className="flex items-center gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl hover:border-primary/40 transition-all group">
+                <div key={student.id} className="flex items-center gap-4 bg-slate-900 p-5 rounded-3xl border border-slate-800 shadow-xl hover:border-primary/40 transition-all group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 size-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  
                   <div className="relative shrink-0">
-                    <div className="size-14 rounded-2xl bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-700 shadow-inner">
-                       <span className="material-symbols-outlined text-3xl text-slate-600">person</span>
+                    <div className="size-16 rounded-2xl bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-700 shadow-inner">
+                       <span className="material-symbols-outlined text-4xl text-slate-600">person</span>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 size-4 bg-emerald-500 rounded-full border-4 border-slate-900"></div>
+                    <div className="absolute -bottom-1 -right-1 size-5 bg-emerald-500 rounded-full border-4 border-slate-900 shadow-lg"></div>
                   </div>
-                  <div className="flex-1 min-w-0">
+                  
+                  <div className="flex-1 min-w-0 z-10">
                     <div className="flex items-center justify-between mb-0.5">
-                      <p className="text-base font-black truncate">{student.full_name}</p>
+                      <p className="text-lg font-black truncate text-white uppercase tracking-tight">{student.full_name}</p>
                     </div>
-                    <p className="text-xs text-slate-500 font-bold">
-                       <span className="text-primary">{student.class_name || "Pas de classe"}</span> • ID: {student.id_user.toUpperCase()}
+                    <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                       <span className="text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">{student.class_name || "Pas de classe"}</span> 
+                       <span className="text-slate-600">•</span>
+                       <span className="text-slate-500">ID: {student.id_user.toUpperCase()}</span>
                     </p>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button className="p-2 text-slate-500 hover:text-blue-500 hover:bg-slate-800 rounded-xl transition-all">
-                      <span className="material-symbols-outlined">edit</span>
+                  
+                  <div className="flex gap-2 shrink-0 z-10">
+                    <button 
+                      onClick={() => setEditModal(student)}
+                      className="p-3 text-slate-500 hover:text-blue-500 hover:bg-slate-800 rounded-2xl transition-all active:scale-90"
+                    >
+                      <span className="material-symbols-outlined font-bold">edit</span>
                     </button>
                     <button 
                       onClick={() => handleDelete(student.id)}
-                      className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                      className="p-3 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all active:scale-90"
                     >
-                      <span className="material-symbols-outlined">delete</span>
+                      <span className="material-symbols-outlined font-bold">delete</span>
                     </button>
                   </div>
                 </div>
@@ -135,13 +163,65 @@ export default function AdminStudents() {
         <div className="fixed bottom-24 left-0 right-0 px-4 pointer-events-none z-40 max-w-4xl mx-auto">
           <Link 
             to="/admin-accounts"
-            className="pointer-events-auto flex w-full items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black shadow-2xl shadow-blue-500/30 active:scale-95 transition-all uppercase tracking-tighter"
+            className="pointer-events-auto flex w-full items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-[2rem] font-black shadow-2xl shadow-blue-500/30 active:scale-95 transition-all uppercase tracking-tighter"
           >
             <span className="material-symbols-outlined font-black">person_add</span>
             Inscrire un nouvel élève
           </Link>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editModal && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-slate-900 border border-white/5 w-full max-w-md rounded-[2.5rem] p-8 space-y-6 shadow-2xl animate-in zoom-in-95">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Éditer Élève</h2>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">ID: {editModal.id_user.toUpperCase()}</p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Nom Complet</label>
+                <input 
+                  className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-primary transition-all font-bold" 
+                  value={editModal.full_name}
+                  onChange={(e) => setEditModal({...editModal, full_name: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Classe / Niveau</label>
+                <select 
+                  className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-primary transition-all font-bold appearance-none"
+                  value={editModal.class_name || ''}
+                  onChange={(e) => setEditModal({...editModal, class_name: e.target.value})}
+                >
+                  <option value="">Aucune classe</option>
+                  {classes.map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button 
+                onClick={() => setEditModal(null)}
+                className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-black uppercase text-xs transition-all"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={handleUpdate}
+                className="flex-1 py-4 bg-primary text-white rounded-2xl font-black uppercase text-xs shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+              >
+                Mettre à jour
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 border-t border-slate-800 bg-[#0a0c10]/90 backdrop-blur-2xl px-2 pb-8 pt-3 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
