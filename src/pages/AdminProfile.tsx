@@ -24,8 +24,23 @@ export default function AdminProfile() {
   }, [navigate]);
 
   const handleUpdate = async () => {
-    setIsEditing(false);
-    alert("Profil mis à jour !");
+    try {
+      const session = localStorage.getItem('user_session');
+      if (session) {
+        const parsed = JSON.parse(session);
+        const updated = { ...parsed, full_name: formData.full_name };
+        localStorage.setItem('user_session', JSON.stringify(updated));
+        setUser(updated);
+      }
+      setIsEditing(false);
+      alert("✅ Profil mis à jour !");
+    } catch (e) {
+      alert("❌ Erreur de mise à jour");
+    }
+  };
+
+  const handleAvatarChange = () => {
+    alert("📸 Changement de photo bientôt disponible !");
   };
 
   if (!user) return null;
@@ -43,7 +58,10 @@ export default function AdminProfile() {
           <div className="size-32 rounded-[2.5rem] bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-slate-700 shadow-2xl relative group overflow-hidden">
              <span className="material-symbols-outlined text-6xl group-hover:scale-110 transition-transform duration-500">person</span>
              <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-             <button className="absolute bottom-1 right-1 size-10 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg hover:scale-110 transition-all">
+             <button 
+                onClick={handleAvatarChange}
+                className="absolute bottom-1 right-1 size-10 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg hover:scale-110 transition-all cursor-pointer z-10"
+              >
                 <span className="material-symbols-outlined text-xl">photo_camera</span>
              </button>
           </div>
@@ -80,7 +98,10 @@ export default function AdminProfile() {
                {isEditing ? (
                   <>
                     <button 
-                      onClick={() => setIsEditing(false)}
+                      onClick={() => {
+                        setIsEditing(false);
+                        setFormData({ full_name: user.full_name || '', email: user.id_user || '' });
+                      }}
                       className="flex-1 py-4 bg-slate-800 text-slate-300 font-bold uppercase text-xs rounded-2xl hover:bg-slate-700 active:scale-95 transition-all"
                     >
                       Annuler
@@ -105,7 +126,10 @@ export default function AdminProfile() {
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-all">
+        <div 
+          onClick={() => navigate('/admin-settings/security')}
+          className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-all active:scale-[0.98]"
+        >
            <div className="flex items-center gap-4">
               <div className="size-10 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
                  <span className="material-symbols-outlined">security</span>
@@ -119,7 +143,7 @@ export default function AdminProfile() {
         </div>
 
         <button 
-          onClick={() => { localStorage.removeItem('user_session'); navigate('/'); }}
+          onClick={() => { if(confirm("Se déconnecter ?")) { localStorage.removeItem('user_session'); navigate('/'); } }}
           className="w-full bg-red-500/10 border border-red-500/20 p-5 rounded-3xl flex items-center gap-4 hover:bg-red-500 hover:text-white transition-all active:scale-95 group mb-20"
         >
            <div className="size-10 rounded-xl bg-red-500/10 group-hover:bg-red-500/20 flex items-center justify-center">
