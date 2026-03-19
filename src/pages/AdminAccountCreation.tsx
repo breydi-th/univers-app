@@ -39,7 +39,7 @@ export default function AdminAccountCreation() {
             role: userType,
             id_user: credentials.id_user,
             password_user: credentials.password_user,
-            grade_level: userType === 'student' ? className : null,
+            class_name: userType === 'student' ? className : null,
             subject: userType === 'teacher' ? subject : null,
             created_at: new Date().toISOString(),
           }

@@ -8,7 +8,6 @@ interface Student {
   full_name: string;
   id_user: string;
   class_name?: string;
-  grade_level?: string;
 }
 
 export default function AdminStudents() {
@@ -112,7 +111,7 @@ export default function AdminStudents() {
                       <p className="text-base font-black truncate">{student.full_name}</p>
                     </div>
                     <p className="text-xs text-slate-500 font-bold">
-                       <span className="text-primary">{student.grade_level || "Pas de classe"}</span> • ID: {student.id_user.toUpperCase()}
+                       <span className="text-primary">{student.class_name || "Pas de classe"}</span> • ID: {student.id_user.toUpperCase()}
                     </p>
                   </div>
                   <div className="flex gap-2 shrink-0">
