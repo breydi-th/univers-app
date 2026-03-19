@@ -64,6 +64,17 @@ export default function AdminAccountCreation() {
     }
   };
 
+  const downloadCredentials = () => {
+    if (!generated) return;
+    const element = document.createElement("a");
+    const file = new Blob([`IDENTIFIANTS GENERES\n--------------------\nNom Complet: ${fullName}\nRole: ${userType}\nIdentifiant Unique: ${generated.id_user}\nMot de passe temporaire: ${generated.password_user}\n--------------------\nVeuillez conserver ces informations en lieu sûr.`], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `identifiants_${generated.id_user}.txt`;
+    document.body.appendChild(element); // Required for this to work in FireFox
+    element.click();
+    document.body.removeChild(element);
+  };
+
   return (
     <div className="bg-slate-950 font-display text-slate-100 min-h-screen flex flex-col selection:bg-primary/30">
       <AdminHeader 
@@ -202,9 +213,12 @@ export default function AdminAccountCreation() {
                   <span className="material-symbols-outlined text-lg">content_copy</span>
                   Copier
                 </button>
-                <button className="flex-1 py-4 bg-slate-950 text-slate-300 border border-slate-800 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95">
-                  <span className="material-symbols-outlined text-lg">print</span>
-                  Imprimer
+                <button 
+                  onClick={downloadCredentials}
+                  className="flex-1 py-4 bg-slate-950 text-slate-300 border border-slate-800 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-lg">download</span>
+                  Télécharger
                 </button>
               </div>
             </div>
