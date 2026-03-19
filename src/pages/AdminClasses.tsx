@@ -27,7 +27,7 @@ export default function AdminClasses() {
       const { data, error } = await supabase
         .from('classes')
         .select('*')
-        .order('level');
+        .order('name');
       
       if (error) throw error;
       setClasses(data || []);
@@ -43,7 +43,7 @@ export default function AdminClasses() {
     try {
       const { error } = await supabase
         .from('classes')
-        .insert([{ name: newName, level: newLevel }]);
+        .insert([{ name: `${newName} (${newLevel})` }]);
       
       if (error) throw error;
       setShowModal(false);
