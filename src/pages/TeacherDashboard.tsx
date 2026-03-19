@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 export default function TeacherDashboard() {
   const [user, setUser] = useState<any>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +21,19 @@ export default function TeacherDashboard() {
     }
     
     setUser(parsedUser);
+    fetchBranding();
   }, [navigate]);
+
+  async function fetchBranding() {
+    try {
+      const { data } = await supabase.from('school_settings').select('logo_url').limit(1).single();
+      if (data && data.logo_url) {
+        setLogoUrl(data.logo_url);
+      }
+    } catch (err) {
+      // Ignore
+    }
+  }
 
   if (!user) return null;
 
@@ -27,15 +41,30 @@ export default function TeacherDashboard() {
     <div className="bg-slate-950 font-display text-slate-100 min-h-screen selection:bg-primary/30">
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
         {/* Header */}
-        <header className="flex items-center bg-slate-900/80 backdrop-blur-xl p-4 border-b border-slate-800 sticky top-0 z-50">
-          <div className="text-primary flex size-10 items-center justify-center bg-primary/10 rounded-xl hover:bg-primary/20 transition-all cursor-pointer">
-            <span className="material-symbols-outlined font-black">menu_open</span>
+        <header className="flex items-center bg-slate-900/80 backdrop-blur-xl p-4 border-b border-slate-800 sticky top-0 z-50 shadow-2xl">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+             <div className="size-12 shrink-0 rounded-2xl bg-white p-1.5 shadow-inner border border-white/10 flex items-center justify-center overflow-hidden">
+                {logoUrl ? (
+                  <img src={logoUrl} className="w-full h-full object-contain" alt="Logo" />
+                ) : (
+                  <span className="material-symbols-outlined text-primary text-3xl">school</span>
+                )}
+             </div>
+             <div className="min-w-0">
+                <h2 className="text-white text-lg font-black leading-tight truncate tracking-tighter uppercase whitespace-nowrap">Espace <span className="text-primary text-xl">Professeur</span></h2>
+                <div className="flex items-center gap-1.5">
+                   <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest truncate">Session Active</p>
+                </div>
+             </div>
           </div>
-          <h2 className="text-white text-lg font-black leading-tight flex-1 text-center tracking-tighter uppercase">Univers <span className="text-primary">App</span></h2>
-          <button className="relative text-slate-400 hover:text-white transition-colors">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-4 ring-slate-900"></span>
-          </button>
+          
+          <div className="flex items-center gap-3">
+            <button className="relative text-slate-400 hover:text-white transition-colors size-10 flex items-center justify-center bg-slate-800 rounded-xl">
+              <span className="material-symbols-outlined">notifications</span>
+              <span className="absolute top-2.5 right-2.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900"></span>
+            </button>
+          </div>
         </header>
 
         {/* Profile Card */}
@@ -53,10 +82,10 @@ export default function TeacherDashboard() {
                   <p className="text-white text-2xl font-black leading-tight tracking-tighter truncate">Prof. {user?.full_name}</p>
                   <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/30">Actif</span>
                 </div>
-                <p className="text-primary text-xs font-black uppercase tracking-[0.2em] mb-2">{user?.subject || "Polynômes & Algèbre"}</p>
+                <p className="text-primary text-xs font-black uppercase tracking-[0.2em] mb-2">{user?.subject || "Gestion / Polynômes"}</p>
                 <div className="flex items-center justify-center sm:justify-start gap-4 text-slate-500 text-xs font-bold">
-                   <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">groups</span> 124 Élèves</span>
-                   <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">schedule</span> 18h / Sem</span>
+                   <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-blue-500">groups</span> 124 Élèves</span>
+                   <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-emerald-500">schedule</span> 18h / Sem</span>
                 </div>
               </div>
             </div>
@@ -97,13 +126,10 @@ export default function TeacherDashboard() {
                      <span className="material-symbols-outlined font-black text-3xl">school</span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-black text-white">Classe de NS4A</h3>
-                    <p className="text-xs text-slate-600 font-bold">42 Élèves inscrits • Session A</p>
+                    <h3 className="font-black text-white uppercase tracking-tight">Classe de NS4A</h3>
+                    <p className="text-xs text-slate-600 font-bold italic">42 Élèves inscrits • Session Matin</p>
                   </div>
                   <span className="material-symbols-outlined text-slate-700">chevron_right</span>
-              </div>
-              <div className="bg-slate-900/40 border-2 border-dashed border-slate-800 p-8 rounded-[2rem] text-center">
-                <p className="text-[10px] text-slate-700 font-black uppercase tracking-[0.2em]">Vous n'avez qu'un groupe assigné pour le moment</p>
               </div>
             </div>
           </section>
@@ -116,13 +142,13 @@ export default function TeacherDashboard() {
                  { icon: 'edit_note', title: 'Calcul Intégral', desc: 'Devoir posté il y a 2h', color: 'blue' },
                  { icon: 'grading', title: 'Contrôle NS2', desc: '15 copies à corriger', color: 'orange' },
                ].map((item, idx) => (
-                 <div key={idx} className="flex gap-4 items-start p-4 bg-slate-900/30 rounded-2xl border border-slate-800/50">
-                    <div className={`p-2 rounded-lg bg-${item.color}-500/10 text-${item.color}-500`}>
+                 <div key={idx} className="flex gap-4 items-start p-4 bg-slate-900/30 rounded-3xl border border-slate-800/50 hover:bg-slate-800 transition-colors cursor-pointer">
+                    <div className={`p-3 rounded-2xl bg-${item.color}-500/10 text-${item.color}-500 border border-${item.color}-500/20`}>
                        <span className="material-symbols-outlined text-xl">{item.icon}</span>
                     </div>
                     <div>
-                       <h4 className="text-xs font-black text-white">{item.title}</h4>
-                       <p className="text-[10px] text-slate-600 font-bold">{item.desc}</p>
+                       <h4 className="text-xs font-black text-white uppercase tracking-tight">{item.title}</h4>
+                       <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest mt-1 opacity-70">{item.desc}</p>
                     </div>
                  </div>
                ))}
@@ -131,23 +157,23 @@ export default function TeacherDashboard() {
         </main>
 
         {/* Bottom Nav */}
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-t border-slate-800 px-2 pb-8 pt-3">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-t border-slate-800 px-2 pb-8 pt-3 shadow-[0_-10px_50px_rgba(0,0,0,0.5)]">
           <div className="flex justify-around items-center max-w-7xl mx-auto w-full">
             <Link className="flex flex-1 flex-col items-center gap-1 text-primary" to="/teacher-dashboard">
               <span className="material-symbols-outlined fill-1">home</span>
-              <p className="text-[10px] font-black uppercase tracking-tighter">Home</p>
+              <p className="text-[10px] font-black uppercase tracking-tighter">Accueil</p>
             </Link>
-            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500" to="/teacher-classes">
+            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/teacher-classes">
               <span className="material-symbols-outlined">groups</span>
               <p className="text-[10px] font-black uppercase tracking-tighter">Classes</p>
             </Link>
-            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500" to="/messages">
+            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/messages">
               <span className="material-symbols-outlined">chat_bubble</span>
-              <p className="text-[10px] font-black uppercase tracking-tighter">Sms</p>
+              <p className="text-[10px] font-black uppercase tracking-tighter">Messages</p>
             </Link>
-            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500" to="/profile">
+            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/profile">
               <span className="material-symbols-outlined">person</span>
-              <p className="text-[10px] font-black uppercase tracking-tighter">Moi</p>
+              <p className="text-[10px] font-black uppercase tracking-tighter">Profil</p>
             </Link>
           </div>
         </nav>
