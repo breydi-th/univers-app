@@ -101,12 +101,12 @@ export default function Welcome() {
           </div>
 
           <div className="hidden lg:block">
-            <h2 className="text-white text-4xl xl:text-6xl font-black leading-tight mb-5 uppercase tracking-tighter">
+            <h2 className="text-white text-4xl xl:text-5xl font-bold leading-tight mb-5 tracking-tight">
               Bienvenue sur<br />
               <span className="text-blue-400">Univers App</span>
             </h2>
-            <p className="text-white/90 text-lg leading-relaxed max-w-xl font-medium">
-              La plateforme éducative complète pour les élèves, professeurs et administrateurs du collège <span className="text-blue-400 font-black">Univers de Ouanaminthe</span>.
+            <p className="text-white/80 text-lg leading-relaxed max-w-xl font-medium">
+              La plateforme éducative complète pour les élèves, professeurs et administrateurs du collège <span className="text-blue-400 font-bold">Univers de Ouanaminthe</span>.
             </p>
           </div>
 
