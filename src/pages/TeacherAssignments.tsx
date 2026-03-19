@@ -5,36 +5,104 @@ import { supabase } from '../lib/supabase';
 export default function TeacherAssignments() {
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [newAssignment, setNewAssignment] = useState({ title: '', description: '', class_id: '', due_date: '' });
+  const [assignmentFile, setAssignmentFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
-    fetchAssignments();
+    fetchData();
   }, []);
 
-  async function fetchAssignments() {
+  async function fetchData() {
     try {
       setLoading(true);
       const sessionStr = localStorage.getItem('user_session');
       if (!sessionStr) return;
       const user = JSON.parse(sessionStr);
 
-      const { data, error } = await supabase
+      const { data: assignmentsData, error } = await supabase
         .from('assignments')
         .select('*')
         .eq('teacher_id', user.id_user)
         .order('due_date', { ascending: true });
 
-      // If assignments table doesn't exist, Supabase returns error. Catch it to show empty state.
       if (error) {
         console.warn("Table assignments absente ou erreur:", error);
-        setAssignments([]);
-        return;
+      } else {
+        setAssignments(assignmentsData || []);
       }
-      setAssignments(data || []);
+
+      // Fetch classes for the dropdown
+      const { data: classesData } = await supabase.from('classes').select('id, name');
+      setClasses(classesData || []);
+
     } catch (err) {
-      console.error("Erreur lors de la récupération des devoirs:", err);
+      console.error("Erreur lors de la récupération des données:", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleAddAssignment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newAssignment.title || !newAssignment.class_id || !newAssignment.due_date) {
+      alert("Veuillez remplir tous les champs obligatoires (Titre, Classe, Date de remise).");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const sessionStr = localStorage.getItem('user_session');
+      if (!sessionStr) throw new Error("Non connecté");
+      const user = JSON.parse(sessionStr);
+
+      let fileUrl = '';
+      if (assignmentFile) {
+        // Upload assignment file to 'documents' bucket
+        const fileExt = assignmentFile.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `assignments/${user.id_user}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, assignmentFile);
+
+        if (uploadError) {
+          console.error("Storage error:", uploadError);
+          throw new Error("Erreur d'upload du fichier. Le bucket 'documents' existe-t-il ?");
+        }
+
+        const { data: publicUrlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+        fileUrl = publicUrlData.publicUrl;
+      }
+
+      const { error: insertError } = await supabase.from('assignments').insert([{
+        title: newAssignment.title,
+        description: newAssignment.description,
+        class_id: newAssignment.class_id,
+        teacher_id: user.id_user,
+        due_date: new Date(newAssignment.due_date).toISOString(),
+        file_url: fileUrl, // custom file URL
+        school_id: user.school_id || 's1'
+      }]);
+
+      if (insertError) throw insertError;
+
+      setShowModal(false);
+      setNewAssignment({ title: '', description: '', class_id: '', due_date: '' });
+      setAssignmentFile(null);
+      fetchData(); // refresh UI
+      alert("Devoir assigné avec succès !");
+
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -53,7 +121,10 @@ export default function TeacherAssignments() {
       <main className="p-4 sm:p-6 max-w-4xl mx-auto min-h-[60vh] pb-32">
         <div className="flex justify-between items-center mb-6 mt-2">
            <h2 className="text-xl font-black text-white px-1">Mes Devoirs</h2>
-           <button className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all active:scale-95">
+           <button 
+             onClick={() => setShowModal(true)}
+             className="bg-orange-600 hover:bg-orange-500 text-white flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-orange-600/20 transition-all active:scale-95"
+           >
              <span className="material-symbols-outlined text-sm">add</span> Créer Devoir
            </button>
         </div>
@@ -87,18 +158,117 @@ export default function TeacherAssignments() {
                   <div>
                     <h3 className="font-black text-white text-base leading-none mb-1">{assignment.title}</h3>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                       Pour: {new Date(assignment.due_date).toLocaleDateString()}
+                       Pour: {new Date(assignment.due_date).toLocaleDateString()} • Classe {assignment.class_id}
                     </p>
                   </div>
                 </div>
-                <button className="p-3 bg-slate-950 text-slate-500 hover:text-white rounded-xl border border-slate-800 transition-colors">
-                   <span className="material-symbols-outlined text-sm">edit</span>
-                </button>
+                
+                <div className="flex gap-2">
+                  {assignment.file_url && (
+                    <a href={assignment.file_url} target="_blank" rel="noreferrer" className="p-3 bg-orange-500/10 text-orange-500 hover:text-white hover:bg-orange-500 rounded-xl transition-colors">
+                      <span className="material-symbols-outlined text-sm">attachment</span>
+                    </a>
+                  )}
+                  <button className="p-3 bg-slate-950 text-slate-500 hover:text-white rounded-xl border border-slate-800 transition-colors">
+                     <span className="material-symbols-outlined text-sm">edit</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </main>
+
+      {/* Modal Ajout Devoir */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-slate-900 border border-white/5 w-full max-w-md rounded-[2.5rem] p-8 space-y-6 shadow-2xl animate-in zoom-in-95">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Nouveau Devoir</h2>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Assigner un travail aux élèves</p>
+            </div>
+            
+            <form onSubmit={handleAddAssignment} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Titre du devoir</label>
+                <input 
+                  required
+                  className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-orange-500 transition-all font-bold" 
+                  value={newAssignment.title}
+                  onChange={(e) => setNewAssignment({...newAssignment, title: e.target.value})}
+                  placeholder="Ex: Devoir de Mathématiques #3"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Instructions (Optionnel)</label>
+                <textarea 
+                  className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-orange-500 transition-all font-bold resize-none h-20" 
+                  value={newAssignment.description}
+                  onChange={(e) => setNewAssignment({...newAssignment, description: e.target.value})}
+                  placeholder="Expliquez ce que l'élève doit faire..."
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Classe</label>
+                  <select 
+                    required
+                    className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-orange-500 transition-all font-bold appearance-none text-slate-200"
+                    value={newAssignment.class_id}
+                    onChange={(e) => setNewAssignment({...newAssignment, class_id: e.target.value})}
+                  >
+                    <option value="" disabled>Choisir...</option>
+                    {classes.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                    <option value="Toutes">Toutes</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Date Remise</label>
+                  <input 
+                    type="date"
+                    required
+                    className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-orange-500 transition-all font-bold text-slate-200"
+                    value={newAssignment.due_date}
+                    onChange={(e) => setNewAssignment({...newAssignment, due_date: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Fichier Joint (PDF, Doc...)</label>
+                <input 
+                  type="file"
+                  onChange={(e) => setAssignmentFile(e.target.files?.[0] || null)}
+                  className="w-full bg-slate-950 border border-slate-800 p-3 rounded-2xl text-xs font-bold outline-none focus:border-orange-500 transition-all text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-orange-500/10 file:text-orange-500 hover:file:bg-orange-500/20 cursor-pointer"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-black uppercase text-xs transition-all"
+                >
+                  Annuler
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase text-xs shadow-xl shadow-orange-500/20 active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
+                >
+                  {isSubmitting ? <span className="material-symbols-outlined animate-spin font-bold">cached</span> : 'Créer Devoir'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

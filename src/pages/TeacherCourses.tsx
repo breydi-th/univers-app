@@ -5,31 +5,97 @@ import { supabase } from '../lib/supabase';
 export default function TeacherCourses() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [newCourse, setNewCourse] = useState({ title: '', description: '', class_id: '' });
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchCourses();
+    fetchData();
   }, []);
 
-  async function fetchCourses() {
+  async function fetchData() {
     try {
       setLoading(true);
       const sessionStr = localStorage.getItem('user_session');
       if (!sessionStr) return;
       const user = JSON.parse(sessionStr);
 
-      const { data, error } = await supabase
+      const { data: coursesData, error } = await supabase
         .from('courses')
         .select('*')
         .eq('teacher_id', user.id_user)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCourses(data || []);
+      setCourses(coursesData || []);
+
+      const { data: classesData } = await supabase.from('classes').select('id, name');
+      setClasses(classesData || []);
+
     } catch (err) {
-      console.error("Erreur lors de la récupération des cours:", err);
+      console.error("Erreur lors de la récupération des données:", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleAddCourse(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newCourse.title || !newCourse.class_id || !videoFile) {
+      alert("Veuillez remplir tous les champs et sélectionner une vidéo.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const sessionStr = localStorage.getItem('user_session');
+      if (!sessionStr) throw new Error("Non connecté");
+      const user = JSON.parse(sessionStr);
+
+      // 1. Upload video to Supabase Storage (bucket 'videos')
+      const fileExt = videoFile.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `courses/${user.id_user}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(filePath, videoFile);
+
+      if (uploadError) {
+         console.error("Erreur d'upload Storage:", uploadError);
+         throw new Error("Erreur d'upload vidéo. Assurez-vous que le bucket Supabase 'videos' existe et qu'il accepte les fichiers.");
+      }
+
+      const { data: publicUrlData } = supabase.storage.from('videos').getPublicUrl(filePath);
+      const videoUrl = publicUrlData.publicUrl;
+
+      // 2. Insert course in database
+      const { error: insertError } = await supabase.from('courses').insert([{
+        title: newCourse.title,
+        description: newCourse.description,
+        class_id: newCourse.class_id,
+        teacher_id: user.id_user,
+        video_url: videoUrl,
+        school_id: user.school_id || 's1'
+      }]);
+
+      if (insertError) throw insertError;
+
+      setShowModal(false);
+      setNewCourse({ title: '', description: '', class_id: '' });
+      setVideoFile(null);
+      fetchData(); // refresh list
+      alert("Cours ajouté avec succès !");
+
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -48,7 +114,10 @@ export default function TeacherCourses() {
       <main className="p-4 sm:p-6 max-w-4xl mx-auto min-h-[60vh] pb-32">
         <div className="flex justify-between items-center mb-6 mt-2">
            <h2 className="text-xl font-black text-white px-1">Mes Cours</h2>
-           <button className="bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 transition-all active:scale-95">
+           <button 
+             onClick={() => setShowModal(true)}
+             className="bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 transition-all active:scale-95"
+           >
              <span className="material-symbols-outlined text-sm">add</span> Nouveau Cours
            </button>
         </div>
@@ -84,14 +153,99 @@ export default function TeacherCourses() {
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{course.class_id} • {new Date(course.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <button className="p-3 bg-slate-950 text-slate-500 hover:text-white rounded-xl border border-slate-800 transition-colors">
-                  <span className="material-symbols-outlined text-sm">edit</span>
-                </button>
+                <div className="flex gap-2">
+                  <a href={course.video_url} target="_blank" rel="noreferrer" className="p-3 bg-blue-500/10 text-blue-500 hover:text-white hover:bg-blue-500 rounded-xl transition-colors">
+                    <span className="material-symbols-outlined text-sm">visibility</span>
+                  </a>
+                  <button className="p-3 bg-slate-950 text-slate-500 hover:text-white rounded-xl border border-slate-800 transition-colors">
+                    <span className="material-symbols-outlined text-sm">edit</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </main>
+
+      {/* Modal Ajout Cours */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-slate-900 border border-white/5 w-full max-w-md rounded-[2.5rem] p-8 space-y-6 shadow-2xl animate-in zoom-in-95">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Nouveau Cours</h2>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Partager une ressource vidéo</p>
+            </div>
+            
+            <form onSubmit={handleAddCourse} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Titre du cours</label>
+                <input 
+                  required
+                  className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold" 
+                  value={newCourse.title}
+                  onChange={(e) => setNewCourse({...newCourse, title: e.target.value})}
+                  placeholder="Ex: Chapitre 1 - Introduction"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Description (Optionnel)</label>
+                <textarea 
+                  className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold resize-none h-20" 
+                  value={newCourse.description}
+                  onChange={(e) => setNewCourse({...newCourse, description: e.target.value})}
+                  placeholder="Ce que les élèves vont apprendre..."
+                />
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Sélectionner la classe</label>
+                <select 
+                  required
+                  className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold appearance-none text-slate-200"
+                  value={newCourse.class_id}
+                  onChange={(e) => setNewCourse({...newCourse, class_id: e.target.value})}
+                >
+                  <option value="" disabled>--- Choisissez une classe ---</option>
+                  {classes.map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                  <option value="Toutes">Toutes les classes</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Fichier Vidéo (.mp4, .mov)</label>
+                <input 
+                  type="file"
+                  accept="video/*"
+                  required
+                  onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                  className="w-full bg-slate-950 border border-slate-800 p-3 rounded-2xl text-xs font-bold outline-none focus:border-primary transition-all text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-blue-500/10 file:text-blue-500 hover:file:bg-blue-500/20 cursor-pointer"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-black uppercase text-xs transition-all"
+                >
+                  Annuler
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs shadow-xl shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
+                >
+                  {isSubmitting ? <span className="material-symbols-outlined animate-spin font-bold">cached</span> : 'Publier'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
