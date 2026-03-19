@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Welcome from './pages/Welcome';
 import Dashboard from './pages/Dashboard';
@@ -25,6 +25,16 @@ import AdminNotifications from './pages/AdminNotifications';
 import AdminProfile from './pages/AdminProfile';
 
 export default function App() {
+  // Initialize theme from localStorage
+  useEffect(() => {
+    const theme = localStorage.getItem('app-theme') || 'dark';
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-mode');
+    } else {
+      document.documentElement.classList.remove('light-mode');
+    }
+  }, []);
+
   return (
     <Router>
       <Routes>

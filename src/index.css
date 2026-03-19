@@ -17,19 +17,45 @@
 }
 
 @layer base {
-  body {
-    @apply bg-white text-slate-900;
-    font-family: 'Lexend', sans-serif;
+  :root {
+    --bg-page: #020617; /* slate-950 */
+    --bg-card: #0f172a; /* slate-900 */
+    --bg-input: #020617; /* slate-950 */
+    --text-primary: #f8fafc; /* slate-50 */
+    --text-secondary: #64748b; /* slate-400 */
+    --border-color: #1e293b; /* slate-800 */
+    --header-bg: #0f172a; /* slate-900 */
   }
 
-  /* Masquer les barres de défilement globalement mais garder le scroll tactile/molette */
-  *::-webkit-scrollbar {
-    display: none;
+  html.light-mode {
+    --bg-page: #f8fafc; /* slate-50 */
+    --bg-card: #ffffff; 
+    --bg-input: #f1f5f9; /* slate-100 */
+    --text-primary: #0f172a; /* slate-900 */
+    --text-secondary: #475569; /* slate-600 */
+    --border-color: #e2e8f0; /* slate-200 */
+    --header-bg: #ffffff;
   }
-  * {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+
+  body {
+    @apply transition-colors duration-300;
+    font-family: 'Lexend', sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
   }
+
+  /* Force dynamic colors for elements that use these variables */
+  .bg-slate-950 { background-color: var(--bg-page) !important; }
+  .bg-slate-900 { background-color: var(--bg-card) !important; }
+  .bg-slate-900\/50 { background-color: color-mix(in srgb, var(--bg-card), transparent 50%) !important; }
+  .bg-\[\#0a0c10\] { background-color: var(--header-bg) !important; }
+  .bg-\[\#0a0c10\]\/90 { background-color: color-mix(in srgb, var(--header-bg), transparent 10%) !important; }
+  .text-slate-100 { color: var(--text-primary) !important; }
+  .text-white { color: var(--text-primary) !important; }
+  .text-slate-500 { color: var(--text-secondary) !important; }
+  .text-slate-400 { color: var(--text-secondary) !important; }
+  .border-slate-800 { border-color: var(--border-color) !important; }
+  .border-white\/5 { border-color: color-mix(in srgb, var(--text-primary), transparent 95%) !important; }
 }
 
 .material-symbols-outlined {

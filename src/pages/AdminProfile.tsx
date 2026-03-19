@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabaseAdmin as supabase } from '../lib/supabase-admin';
 import AdminHeader from '../components/AdminHeader';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function AdminProfile() {
   const navigate = useNavigate();
@@ -82,7 +83,6 @@ export default function AdminProfile() {
       });
       if (error) throw error;
       alert("🎨 Identité visuelle mise à jour !");
-      // Optional: reload or broadcast change
     } catch (err: any) {
       alert("❌ Erreur branding: " + err.message);
     } finally {
@@ -101,6 +101,12 @@ export default function AdminProfile() {
       />
 
       <main className="p-4 sm:p-6 max-w-xl mx-auto space-y-8 pb-32">
+        {/* Theme Settings Section */}
+        <section className="space-y-4">
+           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 px-1">Personnalisation</h3>
+           <ThemeToggle />
+        </section>
+
         {/* Personal Info Section */}
         <div className="flex flex-col items-center gap-4 py-8">
           <div className="size-32 rounded-[2.5rem] bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-slate-700 shadow-2xl relative group overflow-hidden">
@@ -200,8 +206,8 @@ export default function AdminProfile() {
             {/* School Image URL */}
             <div className="space-y-2 pt-2">
                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Image Écran de Connexion</label>
-               <div className="aspect-video w-full rounded-2xl bg-white/5 border border-slate-800 flex items-center justify-center overflow-hidden mb-3 relative">
-                 {schoolSettings.school_image_url ? <img src={schoolSettings.school_image_url} className="w-full h-full object-cover" alt="School" /> : <span className="material-symbols-outlined text-slate-700 text-4xl">landscape</span>}
+               <div className="aspect-video w-full rounded-2xl bg-white/5 border border-slate-800 flex items-center justify-center overflow-hidden mb-3 relative text-slate-500">
+                 {schoolSettings.school_image_url ? <img src={schoolSettings.school_image_url} className="w-full h-full object-cover" alt="School" /> : <span className="material-symbols-outlined text-4xl">landscape</span>}
                  {schoolSettings.school_image_url && <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60"></div>}
                </div>
                <input 
@@ -210,7 +216,7 @@ export default function AdminProfile() {
                   value={schoolSettings.school_image_url}
                   onChange={(e) => setSchoolSettings({...schoolSettings, school_image_url: e.target.value})}
                />
-               <p className="text-[9px] text-slate-600 font-bold italic px-1 pt-1">Cette image s'affiche sur la zone de gauche de l'écran de bienvenue.</p>
+               <p className="text-[9px] text-slate-600 font-bold italic px-1 pt-1 opacity-60">Cette image s'affiche sur la zone de gauche de l'écran de bienvenue.</p>
             </div>
 
             <div className="pt-4">
@@ -226,7 +232,7 @@ export default function AdminProfile() {
         </div>
 
         {/* Security / Logout */}
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-4 pb-10">
           <div 
             onClick={() => navigate('/admin-settings/security')}
             className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-all active:scale-[0.98]"
