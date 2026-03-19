@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { generateCredentials, GeneratedCredentials } from '../lib/ai';
-import { supabase } from '../lib/supabase';
+import { supabaseAdmin as supabase } from '../lib/supabase-admin';
 import AdminHeader from '../components/AdminHeader';
 
 export default function AdminAccountCreation() {

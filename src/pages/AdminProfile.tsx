@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabaseAdmin as supabase } from '../lib/supabase-admin';
 import AdminHeader from '../components/AdminHeader';
 
 export default function AdminProfile() {
@@ -28,14 +28,23 @@ export default function AdminProfile() {
       const session = localStorage.getItem('user_session');
       if (session) {
         const parsed = JSON.parse(session);
+        
+        // Persist to Supabase
+        const { error: dbError } = await supabase.from('profiles').update({ 
+          full_name: formData.full_name 
+        }).eq('id', parsed.id);
+        
+        if (dbError) throw dbError;
+
         const updated = { ...parsed, full_name: formData.full_name };
         localStorage.setItem('user_session', JSON.stringify(updated));
         setUser(updated);
       }
       setIsEditing(false);
       alert("✅ Profil mis à jour !");
-    } catch (e) {
-      alert("❌ Erreur de mise à jour");
+    } catch (e: any) {
+      console.error(e);
+      alert("❌ Erreur: " + e.message);
     }
   };
 
