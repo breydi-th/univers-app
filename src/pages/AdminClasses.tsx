@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabaseAdmin as supabase } from '../lib/supabase-admin';
 import AdminHeader from '../components/AdminHeader';
+import { logActivity } from '../lib/audit';
 
 export interface ClassData {
   id: string;
@@ -68,6 +69,10 @@ export default function AdminClasses() {
         .insert([insertData]);
       
       if (error) throw error;
+      
+      // LOG ACTIVITY
+      await logActivity('Création de salle', 'Classe', `${newName} (${newLevel})`);
+      
       setShowModal(false);
       setNewName('');
       setNewLevel('');
@@ -83,6 +88,10 @@ export default function AdminClasses() {
     try {
       const { error } = await supabase.from('classes').delete().eq('id', id);
       if (error) throw error;
+      
+      // LOG ACTIVITY
+      await logActivity('Suppression salle', 'Classe', `ID: ${id}`);
+      
       fetchClasses();
     } catch (err) {
       console.error(err);

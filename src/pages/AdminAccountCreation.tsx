@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { generateCredentials, GeneratedCredentials } from '../lib/ai';
 import { supabaseAdmin as supabase } from '../lib/supabase-admin';
 import AdminHeader from '../components/AdminHeader';
+import { logActivity } from '../lib/audit';
 
 export default function AdminAccountCreation() {
   const navigate = useNavigate();
@@ -68,8 +69,11 @@ export default function AdminAccountCreation() {
         ]);
 
       if (error) throw error;
+      
+      // LOG ACTIVITY
+      await logActivity('Création de compte', userType === 'teacher' ? 'Professeur' : userType === 'student' ? 'Élève' : 'Admin', fullName);
+      
       setStatus({ type: 'success', message: 'Compte créé avec succès !' });
-      // Keep credentials visible for copy/download
     } catch (err: any) {
       setStatus({ type: 'error', message: 'Erreur sauvegarde: ' + err.message });
     } finally {
