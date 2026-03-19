@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import AdminHeader from '../components/AdminHeader';
 
 interface Student {
   id: string;
@@ -56,16 +57,12 @@ export default function AdminStudents() {
 
   return (
     <div className="bg-slate-950 text-slate-100 font-display min-h-screen flex flex-col selection:bg-primary/30">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0a0c10] border-b border-slate-800/50 p-4 shadow-2xl backdrop-blur-md">
-        <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
-          <Link to="/admin-dashboard" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 transition-all shadow-lg shadow-blue-600/10">
-            <span className="material-symbols-outlined font-black">arrow_back</span>
-          </Link>
-          <div className="flex-1">
-            <h2 className="text-lg font-black leading-tight">Gestion des Éléves</h2>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{students.length} Inscrits</p>
-          </div>
+      <AdminHeader 
+        title="Gestion des Éléves" 
+        subtitle={`${students.length} Inscrits`}
+        showBack={true}
+        backTo="/admin-dashboard"
+        rightActions={
           <div className="flex gap-2">
             <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
               <span className="material-symbols-outlined text-xl">search</span>
@@ -74,8 +71,8 @@ export default function AdminStudents() {
               <span className="material-symbols-outlined text-xl">filter_list</span>
             </button>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <div className="flex-1 max-w-4xl mx-auto w-full flex flex-col">
         {/* Search */}

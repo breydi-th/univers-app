@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import AdminHeader from '../components/AdminHeader';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ students: 0, teachers: 0, classes: 0, courses: 0 });
@@ -44,31 +45,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="bg-slate-950 font-display text-slate-100 min-h-screen flex flex-col selection:bg-primary/30">
-      {/* Header Section */}
-      <header className="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-30 shadow-2xl backdrop-blur-xl bg-slate-900/80">
-        <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600/20 p-2.5 rounded-2xl border border-blue-500/20 shadow-inner">
-              <span className="material-symbols-outlined text-blue-500 text-3xl">account_balance</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-white leading-tight">Institution Univers</h1>
-              <div className="flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Administration</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="flex size-10 items-center justify-center text-slate-400 hover:bg-slate-800 rounded-xl transition-all">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <div className="size-10 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center">
-               <span className="material-symbols-outlined text-slate-500">person</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AdminHeader 
+        title="Institution Univers" 
+        subtitle="Administration"
+      />
 
       <main className="flex-1 p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full pb-32">
         {/* Welcome Text */}

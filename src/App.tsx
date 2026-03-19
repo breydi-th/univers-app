@@ -21,6 +21,8 @@ import AdminSchoolSettings from './pages/AdminSchoolSettings';
 import AdminAcademicSettings from './pages/AdminAcademicSettings';
 import AdminSecuritySettings from './pages/AdminSecuritySettings';
 import AdminNotificationSettings from './pages/AdminNotificationSettings';
+import AdminNotifications from './pages/AdminNotifications';
+import AdminProfile from './pages/AdminProfile';
 
 export default function App() {
   return (
@@ -40,6 +42,8 @@ export default function App() {
         <Route path="/admin-settings/academic" element={<AdminAcademicSettings />} />
         <Route path="/admin-settings/security" element={<AdminSecuritySettings />} />
         <Route path="/admin-settings/notifications" element={<AdminNotificationSettings />} />
+        <Route path="/admin-notifications" element={<AdminNotifications />} />
+        <Route path="/admin-profile" element={<AdminProfile />} />
         <Route path="/teacher-classes" element={<TeacherClasses />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/assignments" element={<Assignments />} />

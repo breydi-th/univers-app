@@ -1,27 +1,28 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import AdminHeader from '../components/AdminHeader';
 
 export default function AdminSettings() {
   const navigate = useNavigate();
   
+  const handleAction = (title: string) => {
+    alert(`Configuration de "${title}" sera disponible dans la prochaine mise à jour.`);
+  };
+
   return (
     <div className="bg-slate-950 font-display text-slate-100 min-h-screen">
-      <header className="sticky top-0 z-50 bg-[#0a0c10] border-b border-slate-800/50 p-4 shadow-2xl backdrop-blur-md">
-        <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
-          <button onClick={() => navigate(-1)} className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 transition-all shadow-lg shadow-blue-600/10">
-            <span className="material-symbols-outlined font-black">arrow_back</span>
-          </button>
-          <div className="flex-1">
-            <h1 className="text-xl font-black leading-tight text-white">Paramètres</h1>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Configuration Système</p>
-          </div>
+      <AdminHeader 
+        title="Paramètres" 
+        subtitle="Configuration Système"
+        showBack={true}
+        rightActions={
           <div className="flex gap-2">
             <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
               <span className="material-symbols-outlined text-xl">help</span>
             </button>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="p-4 sm:p-6 max-w-4xl mx-auto space-y-4">
         <Link 
@@ -80,14 +81,26 @@ export default function AdminSettings() {
           <span className="material-symbols-outlined text-slate-700">chevron_right</span>
         </Link>
 
-        <div className="pt-8 text-center">
-            <p className="text-[10px] text-slate-700 font-bold uppercase tracking-[0.2em] mb-4">Version 1.0.4 • © 2026 Univers-App</p>
+        <div className="pt-4 pb-2">
+            <div className="h-px bg-slate-800 w-full mb-6 opacity-50"></div>
+            
             <button 
               onClick={() => { localStorage.removeItem('user_session'); navigate('/'); }}
-              className="bg-red-500/10 text-red-500 px-6 py-2 rounded-xl font-bold text-sm hover:bg-red-500 hover:text-white transition-all shadow-lg active:scale-95"
+              className="w-full bg-red-600/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-4 hover:bg-red-600/20 hover:border-red-500/40 transition-all cursor-pointer group active:scale-[0.98]"
             >
-              Déconnexion
+              <div className="size-12 rounded-xl bg-red-600/20 flex items-center justify-center text-red-500 group-hover:rotate-12 transition-transform shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                <span className="material-symbols-outlined">logout</span>
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="font-black text-red-500 uppercase tracking-tighter">Déconnexion</h3>
+                <p className="text-[10px] text-red-400/60 font-black uppercase tracking-widest leading-none mt-1">Fermer la session sécurisée</p>
+              </div>
+              <span className="material-symbols-outlined text-red-500/30">chevron_right</span>
             </button>
+        </div>
+
+        <div className="pt-4 text-center">
+            <p className="text-[9px] text-slate-800 font-black uppercase tracking-[0.4em] mb-4 opacity-50">Version 1.0.5 • © 2026 Univers-App</p>
         </div>
       </main>
       

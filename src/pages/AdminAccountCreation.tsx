@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { generateCredentials, GeneratedCredentials } from '../lib/ai';
 import { supabase } from '../lib/supabase';
+import AdminHeader from '../components/AdminHeader';
 
 export default function AdminAccountCreation() {
   const navigate = useNavigate();
@@ -65,23 +66,18 @@ export default function AdminAccountCreation() {
 
   return (
     <div className="bg-slate-950 font-display text-slate-100 min-h-screen flex flex-col selection:bg-primary/30">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0a0c10] border-b border-slate-800/50 p-4 shadow-2xl backdrop-blur-md">
-        <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
-          <button onClick={() => navigate(-1)} className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 transition-all shadow-lg shadow-blue-600/10">
-            <span className="material-symbols-outlined font-black">arrow_back</span>
-          </button>
-          <div className="flex-1 text-center sm:text-left px-4">
-            <h1 className="text-lg font-black tracking-tight text-white leading-tight">Accès & Comptes AI</h1>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Configuration des identifiants</p>
-          </div>
+      <AdminHeader 
+        title="Accès & Comptes AI" 
+        subtitle="Configuration des identifiants"
+        showBack={true}
+        rightActions={
           <div className="flex gap-2">
             <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
               <span className="material-symbols-outlined text-xl">help</span>
             </button>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="max-w-xl mx-auto w-full p-4 space-y-6 flex-1 pb-40">
         {/* Selection Section */}

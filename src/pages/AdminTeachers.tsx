@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import AdminHeader from '../components/AdminHeader';
 
 interface Teacher {
   id: string;
@@ -70,23 +71,22 @@ export default function AdminTeachers() {
   return (
     <div className="bg-slate-950 font-display text-slate-100 min-h-screen flex flex-col">
       <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
-        {/* Header Section */}
-        <div className="flex items-center bg-[#0a0c10] p-4 sticky top-0 z-10 border-b border-slate-800/50 justify-between backdrop-blur-md">
-          <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
-            <Link to="/admin-dashboard" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 transition-all shadow-lg shadow-blue-600/10">
-              <span className="material-symbols-outlined font-black">arrow_back</span>
-            </Link>
-            <h2 className="text-white text-lg font-black leading-tight tracking-tight flex-1">Gestion des professeurs</h2>
-            <div className="flex gap-2">
-              <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
-                <span className="material-symbols-outlined text-xl">search</span>
-              </button>
-              <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
-                <span className="material-symbols-outlined text-xl">filter_list</span>
-              </button>
-            </div>
+      <AdminHeader 
+        title="Gestion des professeurs" 
+        subtitle="Enseignants & Personnel"
+        showBack={true}
+        backTo="/admin-dashboard"
+        rightActions={
+          <div className="flex gap-2">
+            <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
+              <span className="material-symbols-outlined text-xl">search</span>
+            </button>
+            <button className="flex size-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors">
+              <span className="material-symbols-outlined text-xl">filter_list</span>
+            </button>
           </div>
-        </div>
+        }
+      />
 
         <div className="flex-1 max-w-7xl mx-auto w-full flex flex-col">
           {/* Statistics Cards (IMAGE 2 Style) */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import AdminHeader from '../components/AdminHeader';
 
 export interface ClassData {
   id: string;
@@ -68,22 +69,19 @@ export default function AdminClasses() {
 
   return (
     <div className="bg-slate-950 font-display text-slate-100 min-h-screen">
-      <header className="sticky top-0 z-50 bg-[#0a0c10] border-b border-slate-800/50 p-4 shadow-2xl backdrop-blur-md">
-        <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
-          <button onClick={() => navigate('/admin-dashboard')} className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 transition-all shadow-lg shadow-blue-600/10">
-            <span className="material-symbols-outlined font-black">arrow_back</span>
-          </button>
-          <div className="flex-1">
-            <h1 className="text-xl font-black text-white leading-tight">Salles & Classes</h1>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Structure de l'établissement</p>
-          </div>
+      <AdminHeader 
+        title="Salles & Classes" 
+        subtitle="Structure de l'établissement"
+        showBack={true}
+        backTo="/admin-dashboard"
+        rightActions={
           <div className="flex gap-2">
-            <button onClick={() => setShowModal(true)} className="flex size-10 items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20">
+            <button onClick={() => setShowModal(true)} className="flex size-10 items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
               <span className="material-symbols-outlined text-xl font-black">add</span>
             </button>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="p-4 sm:p-6 max-w-4xl mx-auto space-y-4 pb-40">
         {loading ? (
