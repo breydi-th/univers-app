@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 export default function Courses() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const subjects = [
     { id: 1, name: 'Maths', icon: 'calculate', active: true },
     { id: 2, name: 'Physique', icon: 'science', active: false },
@@ -13,29 +17,39 @@ export default function Courses() {
     { id: 8, name: 'Géologie', icon: 'terrain', active: false },
   ];
 
-  const lessons = [
-    {
-      id: 1,
-      title: 'Les Fonctions Dérivées - Introduction',
-      teacher: 'M. Jean-Pierre',
-      duration: '15:30',
-      thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAgNaOGmYj8zqG0MVUPNsLmKbmuRmk9WIvPGF5aOhkLdaq-6FN30x5JSu5cQY8FF7QAKAC6MVhGBmNJ-EboDWXvQRefB4acKviayRSnPQhnSguOzVgco7yr_shisRJ4VhxpTcRsEHV1O14KDjtgK7-C1Xntlf2uHaUxSPk7lncnOBWIQEZ5jVre8E8QfCb5bKqYmj9VaZm4UNlsru0OqwFSRYFAzzTHjV97L5HCKC3UHhP74vsRAmY2jAVPtJTuvNoTBv0OfIN8MVwV',
-    },
-    {
-      id: 2,
-      title: 'Lois de Newton et Dynamique',
-      teacher: 'Mme. Sophie Laurent',
-      duration: '22:45',
-      thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBHnEXvQIs7jTemTT-lY8KArLQr-ch6P2Y6zuNXenedWjApuVZ8HdzwS_O7dWCemhgNMwkcaX1X8CIS5HW6o2GhlEcWSvxDiFtM-xOnVkBTV315p-aI1cGN0idDcOQKyM58Q8kHJSfmATTBWF3asIC5lAYlqJDG_EBEDeqmezE5V_K825qFv52XoCNIyMrXNtj3kBDSIpVPjm4-76MaYT6RBtvV-F6ygd135qKZkaKjJgWacOEpxMSa74Wx4TPBwXgKU5Ze0z3ttcJo',
-    },
-    {
-      id: 3,
-      title: 'Analyse Littéraire : Le Romantisme',
-      teacher: 'M. Robert Durand',
-      duration: '18:15',
-      thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDoQOxjQOpYUlI6kcQvrLc_iyn2qZJ_aeGE658bvs3w5DiWZoPhjYXilkxIpNnZ_xvHhohCTZE1l9ifUjRvsyUulfqguUzu1bGtQkSmjFoi2H-B4zrO2LV-4A_R-MTfn-MexuRxvgcvweUhUdnbyhtfounExYjw_oiHz_VY6V6fW4ksJSGApXcYkv5Zmg63Tls3USHVK1u2RE9EXcoc3Y1zOqMPxBJAZKHzyuiTQX04u8G3dI_5nWw9vVtkufbVpTmVDCU2MLtlm1uE',
-    },
-  ];
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  async function fetchCourses() {
+    try {
+      setLoading(true);
+      const sessionStr = localStorage.getItem('user_session');
+      if (!sessionStr) return;
+      const user = JSON.parse(sessionStr);
+
+      const userClass = user.class_name || user.class_id || '';
+
+      const { data, error } = await supabase
+        .from('courses')
+        .select(`
+          *,
+          profiles!courses_teacher_id_fkey(first_name, last_name)
+        `)
+        .or(`class_id.eq.${userClass},class_id.eq.Toutes,class_id.eq.`)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn("Erreur chargement cours:", error);
+      } else {
+        setCourses(data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display">
@@ -81,33 +95,49 @@ export default function Courses() {
             <button className="text-primary text-sm font-semibold hover:underline">Voir tout</button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {lessons.map((lesson) => (
-              <div key={lesson.id} className="group flex flex-col bg-white dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md active:scale-[0.98] cursor-pointer">
-                <div className="relative aspect-video w-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" 
-                    style={{ backgroundImage: `url('${lesson.thumbnail}')` }}
-                  ></div>
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                    <div className="size-12 rounded-full bg-white/90 dark:bg-primary/90 flex items-center justify-center text-primary dark:text-white shadow-xl transform transition-transform group-hover:scale-110">
-                      <span className="material-symbols-outlined !text-3xl fill-1">play_arrow</span>
+          {loading ? (
+             <div className="flex justify-center py-20">
+               <span className="material-symbols-outlined animate-spin text-4xl text-primary">sync</span>
+             </div>
+          ) : courses.length === 0 ? (
+             <div className="text-center py-20 bg-slate-100 dark:bg-slate-800 rounded-3xl">
+               <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4">video_library</span>
+               <h3 className="text-xl font-bold text-slate-600 dark:text-slate-400 mb-2">Aucun cours disponible</h3>
+               <p className="text-sm text-slate-500">Pas de nouvelle vidéo postée pour votre classe.</p>
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {courses.map((course) => (
+                <div key={course.id} className="group flex flex-col bg-white dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md active:scale-[0.98] cursor-pointer"
+                     onClick={() => { if(course.video_url) window.open(course.video_url, '_blank') }}
+                >
+                  <div className="relative aspect-video w-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex items-center justify-center">
+                    <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600 absolute">movie</span>
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="size-16 rounded-full bg-white/90 dark:bg-primary/90 flex items-center justify-center text-primary dark:text-white shadow-xl transform scale-50 group-hover:scale-100 transition-transform">
+                        <span className="material-symbols-outlined !text-4xl fill-1">play_arrow</span>
+                      </div>
+                    </div>
+                    {/* Fallback Date instead of duration for now */}
+                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg backdrop-blur-md">
+                      {new Date(course.created_at).toLocaleDateString('fr-FR')}
                     </div>
                   </div>
-                  <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg backdrop-blur-md">{lesson.duration}</div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-slate-900 dark:text-white leading-snug group-hover:text-primary transition-colors">{lesson.title}</h3>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="size-6 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
-                      <span className="material-symbols-outlined !text-sm text-primary">person</span>
+                  <div className="p-4">
+                    <h3 className="font-bold text-slate-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2">{course.title}</h3>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="size-6 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+                        <span className="material-symbols-outlined !text-sm text-primary">person</span>
+                      </div>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
+                        {course.profiles ? `${course.profiles.first_name || ''} ${course.profiles.last_name || ''}` : 'Votre Professeur'}
+                      </span>
                     </div>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{lesson.teacher}</span>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 
