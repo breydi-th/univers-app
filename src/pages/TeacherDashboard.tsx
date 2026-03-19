@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import AdminHeader from '../components/AdminHeader';
 
 export default function TeacherDashboard() {
   const [user, setUser] = useState<any>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,14 +16,20 @@ export default function TeacherDashboard() {
       return;
     }
     
-    const parsedUser = JSON.parse(session);
-    if (parsedUser.role !== 'teacher') {
+    try {
+      const parsedUser = JSON.parse(session);
+      if (parsedUser.role !== 'teacher') {
+        navigate('/');
+        return;
+      }
+      setUser(parsedUser);
+      setIsLoading(false);
+      fetchBranding();
+    } catch (e) {
+      console.error("Session parse error:", e);
+      localStorage.removeItem('user_session');
       navigate('/');
-      return;
     }
-    
-    setUser(parsedUser);
-    fetchBranding();
   }, [navigate]);
 
   async function fetchBranding() {
@@ -35,149 +43,145 @@ export default function TeacherDashboard() {
     }
   }
 
-  if (!user) return null;
+  if (isLoading || !user) {
+    return (
+      <div className="bg-slate-950 min-h-screen flex flex-col items-center justify-center text-slate-500 font-display">
+        <div className="size-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em]">Chargement de l'espace...</p>
+      </div>
+    );
+  }
+
+  const defaultAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuA3e_QIZjuP2Z3CMH83dl4zO0RiMzLqtDr-vSbA2YfhHwzq3M4U4HWDM9TDW4b6uHoGBMWXrneaMIMjGmJK9UJlQG4e2xIjbmBnlNlz3fiBwQSg0AEowy5C6LI5IJ4H1r-lNEfhbWJoPbI2WyvC2xnRECzQLymrxxVDJ7GwtYLvS7BISMitSHXN5FXYuZCiRf_qzT5RojN5klFOqB0RY7hGgf4B1nu4IDktt0udH_F-ccu_QeQr8dgD-ctbkyDJNArSquMmv6mUQ91t";
 
   return (
-    <div className="bg-slate-950 font-display text-slate-100 min-h-screen selection:bg-primary/30">
-      <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
-        {/* Header */}
-        <header className="flex items-center bg-slate-900/80 backdrop-blur-xl p-4 border-b border-slate-800 sticky top-0 z-50 shadow-2xl">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-             <div className="size-12 shrink-0 rounded-2xl bg-white p-1.5 shadow-inner border border-white/10 flex items-center justify-center overflow-hidden">
-                {logoUrl ? (
-                  <img src={logoUrl} className="w-full h-full object-contain" alt="Logo" />
-                ) : (
-                  <span className="material-symbols-outlined text-primary text-3xl">school</span>
-                )}
-             </div>
-             <div className="min-w-0">
-                <h2 className="text-white text-lg font-black leading-tight truncate tracking-tighter uppercase whitespace-nowrap">Espace <span className="text-primary text-xl">Professeur</span></h2>
-                <div className="flex items-center gap-1.5">
-                   <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest truncate">Session Active</p>
-                </div>
-             </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <button className="relative text-slate-400 hover:text-white transition-colors size-10 flex items-center justify-center bg-slate-800 rounded-xl">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-2.5 right-2.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900"></span>
-            </button>
-          </div>
-        </header>
+    <div className="bg-slate-950 font-display text-slate-100 min-h-screen selection:bg-primary/30 flex flex-col">
+       <AdminHeader 
+          title="Institution Univers" 
+          subtitle="Portail Enseignant"
+          rightActions={
+            <div className="flex gap-2">
+              <Link to="/messages" className="size-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 group relative">
+                <span className="material-symbols-outlined text-xl group-hover:text-primary">chat_bubble</span>
+                <span className="absolute top-2.5 right-2.5 size-2 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
+              </Link>
+            </div>
+          }
+       />
 
-        {/* Profile Card */}
-        <div className="p-4 bg-gradient-to-b from-slate-900 to-slate-950">
-          <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 size-48 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/20 transition-all duration-700"></div>
-            
-            <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
-              <div 
-                className="bg-center bg-no-repeat aspect-square bg-cover rounded-[1.5rem] h-24 w-24 border-4 border-slate-800 shadow-2xl skew-y-3" 
-                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuA3e_QIZjuP2Z3CMH83dl4zO0RiMzLqtDr-vSbA2YfhHwzq3M4U4HWDM9TDW4b6uHoGBMWXrneaMIMjGmJK9UJlQG4e2xIjbmBnlNlz3fiBwQSg0AEowy5C6LI5IJ4H1r-lNEfhbWJoPbI2WyvC2xnRECzQLymrxxVDJ7GwtYLvS7BISMitSHXN5FXYuZCiRf_qzT5RojN5klFOqB0RY7hGgf4B1nu4IDktt0udH_F-ccu_QeQr8dgD-ctbkyDJNArSquMmv6mUQ91t')" }}
-              ></div>
-              <div className="text-center sm:text-left flex-1 min-w-0">
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-                  <p className="text-white text-2xl font-black leading-tight tracking-tighter truncate">Prof. {user?.full_name}</p>
-                  <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/30">Actif</span>
+      <main className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8 pb-40">
+        {/* Welcome Card & Profile */}
+        <section className="bg-slate-900/50 border border-slate-800 p-8 rounded-[3rem] shadow-2xl relative overflow-hidden group">
+           <div className="absolute top-0 right-0 size-60 bg-primary/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/20 transition-all duration-1000"></div>
+           
+           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+              <div className="relative">
+                <div className="size-32 rounded-[2.5rem] bg-slate-950 border-4 border-slate-800 shadow-2xl overflow-hidden transform hover:rotate-3 transition-transform">
+                  <img 
+                    src={user.avatar_url || defaultAvatar}
+                    className="w-full h-full object-cover"
+                    alt="Professeur"
+                    onError={(e) => { (e.target as HTMLImageElement).src = defaultAvatar; }}
+                  />
                 </div>
-                <p className="text-primary text-xs font-black uppercase tracking-[0.2em] mb-2">{user?.subject || "Gestion / Polynômes"}</p>
-                <div className="flex items-center justify-center sm:justify-start gap-4 text-slate-500 text-xs font-bold">
-                   <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-blue-500">groups</span> 124 Élèves</span>
-                   <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-emerald-500">schedule</span> 18h / Sem</span>
+                <div className="absolute -bottom-2 -right-2 bg-emerald-500 size-10 rounded-2xl flex items-center justify-center border-4 border-slate-900 shadow-xl">
+                    <span className="material-symbols-outlined text-white text-lg">verified_user</span>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Action Grid */}
-        <main className="flex-1 pb-40 px-4 space-y-8">
-          <section className="pt-4 max-w-7xl mx-auto">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6 px-1">Actions Principales</h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {[
-                { icon: 'video_call', label: 'Cours Visio', color: 'blue', blur: 'rgba(59,130,246,0.1)' },
-                { icon: 'assignment', label: 'Devoirs', color: 'orange', blur: 'rgba(249,115,22,0.1)' },
-                { icon: 'quiz', label: 'Examens', color: 'emerald', blur: 'rgba(16,185,129,0.1)' },
-                { icon: 'publish', label: 'Résultats', color: 'purple', blur: 'rgba(168,85,247,0.1)' },
-              ].map((action) => (
-                <button key={action.label} className="flex flex-col items-center justify-center p-6 bg-slate-900/50 rounded-[2rem] border border-slate-800 hover:border-primary/40 transition-all shadow-xl group">
-                  <div className={`p-4 rounded-2xl mb-3 shadow-inner transform group-hover:scale-110 transition-transform`} style={{ backgroundColor: action.blur }}>
-                    <span className={`material-symbols-outlined font-black text-${action.color}-500 text-3xl`}>{action.icon}</span>
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors">{action.label}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Mes Classes */}
-          <section className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-6 px-1">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Mes Groupes</h2>
-              <Link className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline" to="/teacher-classes">Tout voir</Link>
-            </div>
-            
-            <div className="flex flex-col gap-3">
-              <div className="bg-slate-900/40 p-4 rounded-3xl border border-slate-800 flex items-center gap-4 hover:bg-slate-900 transition-colors cursor-pointer group">
-                  <div className="size-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-600 group-hover:text-primary transition-colors">
-                     <span className="material-symbols-outlined font-black text-3xl">school</span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-black text-white uppercase tracking-tight">Classe de NS4A</h3>
-                    <p className="text-xs text-slate-600 font-bold italic">42 Élèves inscrits • Session Matin</p>
-                  </div>
-                  <span className="material-symbols-outlined text-slate-700">chevron_right</span>
-              </div>
-            </div>
-          </section>
-
-          {/* Recent Activity */}
-          <section className="max-w-7xl mx-auto">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6 px-1">Activité Récente</h2>
-            <div className="space-y-3">
-               {[
-                 { icon: 'edit_note', title: 'Calcul Intégral', desc: 'Devoir posté il y a 2h', color: 'blue' },
-                 { icon: 'grading', title: 'Contrôle NS2', desc: '15 copies à corriger', color: 'orange' },
-               ].map((item, idx) => (
-                 <div key={idx} className="flex gap-4 items-start p-4 bg-slate-900/30 rounded-3xl border border-slate-800/50 hover:bg-slate-800 transition-colors cursor-pointer">
-                    <div className={`p-3 rounded-2xl bg-${item.color}-500/10 text-${item.color}-500 border border-${item.color}-500/20`}>
-                       <span className="material-symbols-outlined text-xl">{item.icon}</span>
+              <div className="text-center md:text-left space-y-2">
+                 <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Bienvenue, Prof. {user.full_name?.split(' ')[0]}</h2>
+                 <p className="text-primary font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
+                    Spécialité: <span className="text-white">{user.subject || 'Gestion / Économie'}</span>
+                 </p>
+                 <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
+                    <div className="flex items-center gap-2 bg-slate-950 px-4 py-2 rounded-2xl border border-slate-800/50">
+                       <span className="material-symbols-outlined text-blue-500 text-sm">groups</span>
+                       <span className="text-[10px] font-black uppercase text-slate-400">124 Élèves</span>
                     </div>
-                    <div>
-                       <h4 className="text-xs font-black text-white uppercase tracking-tight">{item.title}</h4>
-                       <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest mt-1 opacity-70">{item.desc}</p>
+                    <div className="flex items-center gap-2 bg-slate-950 px-4 py-2 rounded-2xl border border-slate-800/50">
+                       <span className="material-symbols-outlined text-emerald-500 text-sm">schedule</span>
+                       <span className="text-[10px] font-black uppercase text-slate-400">18h / Hebdo</span>
                     </div>
                  </div>
-               ))}
-            </div>
-          </section>
-        </main>
+              </div>
+           </div>
+        </section>
 
-        {/* Bottom Nav */}
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-t border-slate-800 px-2 pb-8 pt-3 shadow-[0_-10px_50px_rgba(0,0,0,0.5)]">
-          <div className="flex justify-around items-center max-w-7xl mx-auto w-full">
-            <Link className="flex flex-1 flex-col items-center gap-1 text-primary" to="/teacher-dashboard">
-              <span className="material-symbols-outlined fill-1">home</span>
-              <p className="text-[10px] font-black uppercase tracking-tighter">Accueil</p>
-            </Link>
-            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/teacher-classes">
-              <span className="material-symbols-outlined">groups</span>
-              <p className="text-[10px] font-black uppercase tracking-tighter">Classes</p>
-            </Link>
-            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/messages">
-              <span className="material-symbols-outlined">chat_bubble</span>
-              <p className="text-[10px] font-black uppercase tracking-tighter">Messages</p>
-            </Link>
-            <Link className="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors" to="/profile">
-              <span className="material-symbols-outlined">person</span>
-              <p className="text-[10px] font-black uppercase tracking-tighter">Profil</p>
-            </Link>
-          </div>
-        </nav>
-      </div>
+        {/* Quick Actions Grid */}
+        <section className="space-y-6">
+           <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 px-1">Outils de travail</h3>
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { icon: 'video_call', label: 'Espace Visio', color: 'blue', desc: 'Démarrer un cours' },
+                { icon: 'assignment', label: 'Mes Devoirs', color: 'orange', desc: 'Gestion des exercices' },
+                { icon: 'quiz', label: 'Examens', color: 'emerald', desc: 'Création & Notation' },
+                { icon: 'publish', label: 'Résultats', color: 'purple', desc: 'Publier les notes' },
+              ].map((tool) => (
+                <button key={tool.label} className="flex flex-col items-center justify-center p-6 bg-slate-900/40 rounded-[2.5rem] border border-slate-800 hover:border-primary/50 transition-all shadow-xl group hover:bg-slate-900/80">
+                  <div className={`p-4 rounded-2xl mb-4 bg-slate-950 border border-slate-800 group-hover:scale-110 transition-transform`}>
+                    <span className={`material-symbols-outlined font-black text-${tool.color}-500 text-3xl`}>{tool.icon}</span>
+                  </div>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-white mb-1">{tool.label}</span>
+                  <span className="text-[8px] font-bold text-slate-500 uppercase">{tool.desc}</span>
+                </button>
+              ))}
+           </div>
+        </section>
+
+        {/* Classes List */}
+        <section className="space-y-6">
+           <div className="flex items-center justify-between px-1">
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Mes Classes de Référence</h3>
+              <Link to="/teacher-classes" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Voir l'emploi du temps</Link>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Link to="/teacher-classes" className="bg-slate-900/40 p-5 rounded-3xl border border-slate-800 flex items-center gap-5 hover:bg-slate-900 transition-all group border-b-4 border-b-orange-500/30">
+                  <div className="size-16 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center group-hover:text-orange-500 transition-colors">
+                     <span className="material-symbols-outlined font-black text-4xl">meeting_room</span>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-black text-white uppercase tracking-tight text-lg">Section NS4-A</h4>
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Groupe Terminale • 42 Étudiants</p>
+                  </div>
+                  <span className="material-symbols-outlined text-slate-700 font-black">chevron_right</span>
+              </Link>
+
+              <div className="bg-slate-900/40 p-5 rounded-3xl border border-slate-800 flex items-center gap-5 opacity-60 cursor-not-allowed">
+                  <div className="size-16 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center">
+                     <span className="material-symbols-outlined font-black text-4xl">history_edu</span>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-black text-white uppercase tracking-tight text-lg">Section NS3-B</h4>
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">En attente d'activation</p>
+                  </div>
+              </div>
+           </div>
+        </section>
+      </main>
+
+      {/* Persistent Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0c10]/80 backdrop-blur-2xl border-t border-white/5 px-4 pb-10 pt-4 shadow-2xl">
+        <div className="flex justify-around items-center max-w-4xl mx-auto w-full">
+          <Link className="flex flex-1 flex-col items-center gap-1.5 text-primary" to="/teacher-dashboard">
+            <span className="material-symbols-outlined fill-[1] text-2xl">roofing</span>
+            <p className="text-[9px] font-black uppercase tracking-widest">Accueil</p>
+          </Link>
+          <Link className="flex flex-1 flex-col items-center gap-1.5 text-slate-500 hover:text-white transition-all" to="/teacher-classes">
+            <span className="material-symbols-outlined text-2xl">groups_3</span>
+            <p className="text-[9px] font-black uppercase tracking-widest">Classes</p>
+          </Link>
+          <Link className="flex flex-1 flex-col items-center gap-1.5 text-slate-500 hover:text-white transition-all" to="/messages">
+            <span className="material-symbols-outlined text-2xl">forum</span>
+            <p className="text-[9px] font-black uppercase tracking-widest">Chat</p>
+          </Link>
+          <Link className="flex flex-1 flex-col items-center gap-1.5 text-slate-500 hover:text-white transition-all" to="/profile">
+            <span className="material-symbols-outlined text-2xl">account_circle</span>
+            <p className="text-[9px] font-black uppercase tracking-widest">Profil</p>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 }
