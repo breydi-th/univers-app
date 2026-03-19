@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { supabaseAdmin as supabase } from '../lib/supabase-admin';
 
 interface AdminHeaderProps {
   title: string;
@@ -11,6 +12,22 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ title, subtitle, showBack, backTo, rightActions }: AdminHeaderProps) {
   const navigate = useNavigate();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchLogo();
+  }, []);
+
+  async function fetchLogo() {
+    try {
+      const { data } = await supabase.from('school_settings').select('logo_url').limit(1).single();
+      if (data && data.logo_url) {
+        setLogoUrl(data.logo_url);
+      }
+    } catch (err) {
+      // Ignore
+    }
+  }
 
   return (
     <header className="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 shadow-2xl backdrop-blur-xl bg-slate-900/80">
@@ -24,15 +41,19 @@ export default function AdminHeader({ title, subtitle, showBack, backTo, rightAc
               <span className="material-symbols-outlined font-black">arrow_back</span>
             </button>
           ) : (
-            <div className="bg-blue-600/20 p-2.5 rounded-2xl border border-blue-500/20 shadow-inner">
-              <span className="material-symbols-outlined text-blue-500 text-3xl">account_balance</span>
+            <div className="size-12 shrink-0 rounded-2xl bg-white p-1.5 shadow-inner border border-white/10 flex items-center justify-center overflow-hidden">
+               {logoUrl ? (
+                 <img src={logoUrl} className="w-full h-full object-contain" alt="Logo" />
+               ) : (
+                 <span className="material-symbols-outlined text-blue-500 text-3xl">account_balance</span>
+               )}
             </div>
           )}
-          <div>
-            <h1 className="text-xl font-black text-white leading-tight">{title}</h1>
+          <div className="min-w-0">
+            <h1 className="text-lg font-black text-white leading-tight truncate">{title}</h1>
             <div className="flex items-center gap-1.5">
               <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{subtitle}</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] truncate">{subtitle}</p>
             </div>
           </div>
         </div>
