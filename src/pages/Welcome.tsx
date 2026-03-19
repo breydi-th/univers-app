@@ -90,23 +90,23 @@ export default function Welcome() {
                 <img src={branding.logo_url} className="w-full h-full object-contain" alt="Logo" />
               </div>
             ) : (
-              <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-xl">
+              <div className="bg-blue-600/20 backdrop-blur-md p-3 rounded-2xl border border-blue-500/20 shadow-xl">
                  <span className="material-symbols-outlined text-white text-3xl">school</span>
               </div>
             )}
             <div>
-              <h1 className="text-white text-xl lg:text-2xl font-black tracking-tighter uppercase">{branding.school_name}</h1>
-              <p className="text-blue-300 text-[10px] font-black uppercase tracking-[0.3em] opacity-80">Plateforme Éducative</p>
+              <h1 className="text-white text-xl lg:text-2xl font-black tracking-tighter uppercase leading-none">{branding.school_name}</h1>
+              <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.3em] opacity-90 mt-1">Plateforme Éducative</p>
             </div>
           </div>
 
           <div className="hidden lg:block">
-            <h2 className="text-white text-4xl xl:text-5xl font-black leading-tight mb-4 uppercase tracking-tighter">
+            <h2 className="text-white text-4xl xl:text-6xl font-black leading-tight mb-5 uppercase tracking-tighter">
               Bienvenue sur<br />
               <span className="text-blue-400">Univers App</span>
             </h2>
-            <p className="text-slate-300 text-base leading-relaxed max-w-md font-bold italic opacity-80 border-l-2 border-blue-500 pl-4">
-              La plateforme numérique dédiée aux étudiants, professeurs et administration de l'institution Univers Ouanaminthe.
+            <p className="text-white/90 text-lg leading-relaxed max-w-xl font-medium">
+              La plateforme éducative complète pour les élèves, professeurs et administrateurs du collège <span className="text-blue-400 font-black">Univers de Ouanaminthe</span>.
             </p>
           </div>
 
