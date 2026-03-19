@@ -44,11 +44,15 @@ export default function TeacherDashboard() {
     }
 
     // Fetch branding en arrière-plan (non-bloquant)
-    supabase.from('school_settings').select('*').limit(1).single()
-      .then(({ data }) => {
+    const fetchBranding = async () => {
+      try {
+        const { data } = await supabase.from('school_settings').select('*').limit(1).single();
         if (data) setBranding({ logo: data.logo_url, name: data.school_name || 'Institution Univers' });
-      })
-      .catch(() => {});
+      } catch (err) {
+        // ignore
+      }
+    };
+    fetchBranding();
   }, [navigate]);
 
   // Écran de chargement très court — ne bloque plus l'affichage
