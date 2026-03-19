@@ -33,6 +33,13 @@ export default function TeacherDashboard() {
         navigate('/');
         return;
       }
+
+      // Check for local avatar override
+      const savedAvatar = localStorage.getItem(`avatar_override_${parsed.id_user}`);
+      if (savedAvatar) {
+        parsed.avatar_url = savedAvatar;
+      }
+
       setUser(parsed);
       setStatus(prev => ({ ...prev, loading: false }));
       

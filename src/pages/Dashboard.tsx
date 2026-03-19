@@ -19,6 +19,12 @@ export default function Dashboard() {
       navigate('/');
       return;
     }
+
+    // Check for local avatar override
+    const savedAvatar = localStorage.getItem(`avatar_override_${parsedUser.id_user}`);
+    if (savedAvatar) {
+      parsedUser.avatar_url = savedAvatar;
+    }
     
     setUser(parsedUser);
     fetchBranding();
@@ -55,10 +61,19 @@ export default function Dashboard() {
                 <h1 className="text-lg font-black tracking-tighter text-white truncate uppercase">Bonjour, {user?.full_name?.split(' ')[0]}</h1>
              </div>
           </div>
-          <button className="size-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors relative ring-1 ring-slate-700 active:scale-95 shadow-lg">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2.5 right-2.5 size-2 bg-red-500 rounded-full ring-2 ring-slate-800 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
-          </button>
+          <div className="flex items-center gap-3">
+            <Link to="/profile" className="size-10 rounded-xl overflow-hidden border border-slate-700 shadow-xl group">
+               <img 
+                 src={user?.avatar_url || "https://lh3.googleusercontent.com/aida-public/AB6AXuCZ-A4IMJFJGX3PvWcjPVaJztWk84OSj0xRq42GJj-xe6ZxQGEejZMBNonMR8b98IuXo97RPmFQAP_fJoRhv0FgDhgAjNeaC5ZQ1RnDhWru0YHvE8nNbAAIaXmzIxFm2SaU5B4QcjNgvartLSx7KvAGSKlKr1sCI3BnpavFvzYDLr8becvH6aZ5YJxe_egqqUVeyGLKHWzNhl38FhYWI3SSkgPlWnWqcMStVHfQA9RtYU5Z7wc2KEBz8__m4MZsV5xM4yMdBTNjP8BB"} 
+                 className="w-full h-full object-cover group-hover:scale-110 transition-transform" 
+                 alt="User" 
+               />
+            </Link>
+            <button className="size-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors relative ring-1 ring-slate-700 active:scale-95 shadow-lg">
+              <span className="material-symbols-outlined">notifications</span>
+              <span className="absolute top-2.5 right-2.5 size-2 bg-red-500 rounded-full ring-2 ring-slate-800 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
+            </button>
+          </div>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 space-y-8 max-w-7xl mx-auto w-full">
