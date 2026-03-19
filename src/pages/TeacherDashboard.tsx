@@ -1,53 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import AdminHeader from '../components/AdminHeader';
 
+/**
+ * Teacher Dashboard - Portiel Enseignant
+ * Optimized for institutional performance and branding.
+ */
 export default function TeacherDashboard() {
   const [user, setUser] = useState<any>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [branding, setBranding] = useState<{logo_url: string | null, school_name: string}>({
+    logo_url: null,
+    school_name: 'Institution Univers'
+  });
+  const [status, setStatus] = useState({ loading: true, error: null as string | null });
   const navigate = useNavigate();
 
   useEffect(() => {
-    const session = localStorage.getItem('user_session');
-    if (!session) {
+    // 1. Validate Session with extra safety
+    console.log("Teacher dashboard initialization...");
+    const sessionStr = localStorage.getItem('user_session');
+    
+    if (!sessionStr) {
+      console.warn("No active session found, redirecting to login.");
       navigate('/');
       return;
     }
-    
+
     try {
-      const parsedUser = JSON.parse(session);
-      if (parsedUser.role !== 'teacher') {
+      const parsed = JSON.parse(sessionStr);
+      if (parsed.role !== 'teacher') {
+        console.warn("User role not authorized for teacher portal.");
         navigate('/');
         return;
       }
-      setUser(parsedUser);
-      setIsLoading(false);
-      fetchBranding();
-    } catch (e) {
-      console.error("Session parse error:", e);
+      setUser(parsed);
+      setStatus(prev => ({ ...prev, loading: false }));
+      
+      // 2. Load institutional branding
+      fetchInstitutionalIdentity();
+    } catch (err: any) {
+      console.error("Dashboard session failure:", err);
       localStorage.removeItem('user_session');
       navigate('/');
     }
   }, [navigate]);
 
-  async function fetchBranding() {
+  async function fetchInstitutionalIdentity() {
     try {
-      const { data } = await supabase.from('school_settings').select('logo_url').limit(1).single();
-      if (data && data.logo_url) {
-        setLogoUrl(data.logo_url);
+      const { data, error } = await supabase
+        .from('school_settings')
+        .select('logo_url, school_name')
+        .limit(1)
+        .single();
+      
+      if (data && !error) {
+        setBranding({
+          logo_url: data.logo_url || null,
+          school_name: data.school_name || 'Institution Univers'
+        });
       }
-    } catch (err) {
-      // Ignore
+    } catch (e) {
+      console.log("Branding fetch silent fail:", e);
     }
   }
 
-  if (isLoading || !user) {
+  // Loading Screen (Premium Style)
+  if (status.loading || !user) {
     return (
-      <div className="bg-slate-950 min-h-screen flex flex-col items-center justify-center text-slate-500 font-display">
-        <div className="size-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
-        <p className="text-[10px] font-black uppercase tracking-[0.3em]">Chargement de l'espace...</p>
+      <div className="bg-slate-950 min-h-screen flex flex-col items-center justify-center p-6 text-center select-none">
+        <div className="relative mb-8">
+           <div className="size-20 rounded-[2rem] bg-primary/20 animate-pulse border-2 border-primary/30 shadow-[0_0_50px_rgba(var(--color-primary),0.2)]"></div>
+           <div className="absolute inset-0 flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary text-4xl animate-bounce">school</span>
+           </div>
+        </div>
+        <h3 className="text-white text-xl font-black uppercase tracking-tighter mb-2">Chargement Univers App</h3>
+        <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] max-w-[200px] leading-loose">
+          Synchronisation sécurisée avec le portail enseignant...
+        </p>
       </div>
     );
   }
@@ -55,130 +85,133 @@ export default function TeacherDashboard() {
   const defaultAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuA3e_QIZjuP2Z3CMH83dl4zO0RiMzLqtDr-vSbA2YfhHwzq3M4U4HWDM9TDW4b6uHoGBMWXrneaMIMjGmJK9UJlQG4e2xIjbmBnlNlz3fiBwQSg0AEowy5C6LI5IJ4H1r-lNEfhbWJoPbI2WyvC2xnRECzQLymrxxVDJ7GwtYLvS7BISMitSHXN5FXYuZCiRf_qzT5RojN5klFOqB0RY7hGgf4B1nu4IDktt0udH_F-ccu_QeQr8dgD-ctbkyDJNArSquMmv6mUQ91t";
 
   return (
-    <div className="bg-slate-950 font-display text-slate-100 min-h-screen selection:bg-primary/30 flex flex-col">
-       <AdminHeader 
-          title="Institution Univers" 
-          subtitle="Portail Enseignant"
-          rightActions={
-            <div className="flex gap-2">
-              <Link to="/messages" className="size-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 group relative">
-                <span className="material-symbols-outlined text-xl group-hover:text-primary">chat_bubble</span>
-                <span className="absolute top-2.5 right-2.5 size-2 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
-              </Link>
-            </div>
-          }
-       />
+    <div className="bg-slate-950 font-display text-slate-100 min-h-screen flex flex-col selection:bg-primary/30">
+      {/* Header Professionnel */}
+      <header className="flex items-center justify-between p-4 bg-slate-900/80 backdrop-blur-2xl border-b border-slate-800 sticky top-0 z-50 shadow-2xl">
+        <div className="flex items-center gap-3">
+           <div className="size-12 rounded-2xl bg-white p-1.5 shadow-2xl border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+             {branding.logo_url ? (
+               <img src={branding.logo_url} className="w-full h-full object-contain" alt="Logo" />
+             ) : (
+               <span className="material-symbols-outlined text-primary text-3xl">account_balance</span>
+             )}
+           </div>
+           <div className="min-w-0">
+             <h1 className="text-white text-lg font-black uppercase tracking-tighter leading-none truncate">{branding.school_name}</h1>
+             <p className="text-primary text-[9px] font-black uppercase tracking-widest mt-1 opacity-80">Portail Enseignant</p>
+           </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
+           <Link to="/messages" className="size-10 flex items-center justify-center bg-slate-800 border border-slate-700/50 rounded-xl text-slate-400 hover:text-white relative">
+              <span className="material-symbols-outlined">chat_bubble</span>
+              <span className="absolute top-2 right-2 size-2.5 bg-red-600 rounded-full border-2 border-slate-900 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]"></span>
+           </Link>
+           <Link to="/profile" className="size-10 rounded-xl border border-slate-800 overflow-hidden shadow-lg group">
+              <img src={user.avatar_url || defaultAvatar} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all" alt="Profile" />
+           </Link>
+        </div>
+      </header>
 
       <main className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8 pb-40">
-        {/* Welcome Card & Profile */}
-        <section className="bg-slate-900/50 border border-slate-800 p-8 rounded-[3rem] shadow-2xl relative overflow-hidden group">
-           <div className="absolute top-0 right-0 size-60 bg-primary/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/20 transition-all duration-1000"></div>
-           
-           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-              <div className="relative">
-                <div className="size-32 rounded-[2.5rem] bg-slate-950 border-4 border-slate-800 shadow-2xl overflow-hidden transform hover:rotate-3 transition-transform">
-                  <img 
-                    src={user.avatar_url || defaultAvatar}
-                    className="w-full h-full object-cover"
-                    alt="Professeur"
-                    onError={(e) => { (e.target as HTMLImageElement).src = defaultAvatar; }}
-                  />
-                </div>
-                <div className="absolute -bottom-2 -right-2 bg-emerald-500 size-10 rounded-2xl flex items-center justify-center border-4 border-slate-900 shadow-xl">
-                    <span className="material-symbols-outlined text-white text-lg">verified_user</span>
-                </div>
-              </div>
+        {/* Welcome Text Section */}
+        <section className="space-y-1 animate-in fade-in slide-in-from-top-4 duration-500">
+          <h2 className="text-2xl sm:text-3xl font-black text-white px-1">Salut, Prof. {user.full_name?.split(' ')[0]} 👋</h2>
+          <p className="text-slate-500 text-sm font-medium px-1">Voici le résumé de vos cours et sessions aujourd'hui.</p>
+        </section>
 
-              <div className="text-center md:text-left space-y-2">
-                 <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Bienvenue, Prof. {user.full_name?.split(' ')[0]}</h2>
-                 <p className="text-primary font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
-                    Spécialité: <span className="text-white">{user.subject || 'Gestion / Économie'}</span>
-                 </p>
-                 <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
-                    <div className="flex items-center gap-2 bg-slate-950 px-4 py-2 rounded-2xl border border-slate-800/50">
-                       <span className="material-symbols-outlined text-blue-500 text-sm">groups</span>
-                       <span className="text-[10px] font-black uppercase text-slate-400">124 Élèves</span>
+        {/* Stats Grid */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in duration-700">
+          <div className="bg-slate-900/60 p-6 rounded-[2.5rem] border border-slate-800/80 shadow-xl group hover:border-blue-500/50 transition-all h-full">
+            <div className="p-3 bg-blue-500/10 rounded-2xl size-fit mb-4 text-blue-500">
+               <span className="material-symbols-outlined">groups</span>
+            </div>
+            <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-1">Total Élèves</p>
+            <p className="text-3xl font-black text-white">124</p>
+          </div>
+          <div className="bg-slate-900/60 p-6 rounded-[2.5rem] border border-slate-800/80 shadow-xl group hover:border-orange-500/50 transition-all h-full">
+            <div className="p-3 bg-orange-500/10 rounded-2xl size-fit mb-4 text-orange-500">
+               <span className="material-symbols-outlined">timer</span>
+            </div>
+            <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-1">Heures Hebdo</p>
+            <p className="text-3xl font-black text-white">18h</p>
+          </div>
+          <div className="bg-slate-900/60 p-6 rounded-[2.5rem] border border-slate-800/80 shadow-xl group hover:border-emerald-500/50 transition-all h-full">
+            <div className="p-3 bg-emerald-500/10 rounded-2xl size-fit mb-4 text-emerald-500">
+               <span className="material-symbols-outlined">quiz</span>
+            </div>
+            <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-1">Examens Prévus</p>
+            <p className="text-3xl font-black text-white">03</p>
+          </div>
+          <div className="bg-slate-900/60 p-6 rounded-[2.5rem] border border-slate-800/80 shadow-xl group hover:border-purple-500/50 transition-all h-full">
+            <div className="p-3 bg-purple-500/10 rounded-2xl size-fit mb-4 text-purple-500">
+               <span className="material-symbols-outlined">reviews</span>
+            </div>
+            <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-1">À Corriger</p>
+            <p className="text-3xl font-black text-white">12</p>
+          </div>
+        </section>
+
+        {/* Action Widgets */}
+        <section className="grid md:grid-cols-2 gap-6">
+           <div className="bg-slate-900/40 p-8 rounded-[3rem] border border-slate-800 shadow-2xl space-y-6">
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-blue-500 flex items-center gap-2">
+                 <span className="material-symbols-outlined text-base">video_chat</span>
+                 Espace Interactif
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                 <button className="flex flex-col items-center justify-center p-6 bg-slate-950/80 border border-slate-800 rounded-3xl hover:bg-slate-800 transition-all group active:scale-95">
+                    <span className="material-symbols-outlined text-3xl mb-3 text-slate-500 group-hover:text-primary transition-colors">video_call</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Cours Visio</span>
+                 </button>
+                 <button className="flex flex-col items-center justify-center p-6 bg-slate-950/80 border border-slate-800 rounded-3xl hover:bg-slate-800 transition-all group active:scale-95">
+                    <span className="material-symbols-outlined text-3xl mb-3 text-slate-500 group-hover:text-orange-500 transition-colors">assignment_add</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Poster Devoir</span>
+                 </button>
+              </div>
+           </div>
+
+           <div className="bg-slate-900/40 p-8 rounded-[3rem] border border-slate-800 shadow-2xl space-y-6">
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-emerald-500 flex items-center gap-2">
+                 <span className="material-symbols-outlined text-base">school</span>
+                 Mes Classes actives
+              </h3>
+              <div className="space-y-3">
+                 <Link to="/teacher-classes" className="flex items-center gap-4 p-4 bg-slate-950/80 border border-slate-800/80 rounded-[2rem] hover:bg-slate-900 transition-all group">
+                    <div className="size-12 rounded-2xl bg-slate-900 flex items-center justify-center text-slate-500 group-hover:text-emerald-500 transition-colors">
+                       <span className="material-symbols-outlined text-3xl font-black">door_open</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-950 px-4 py-2 rounded-2xl border border-slate-800/50">
-                       <span className="material-symbols-outlined text-emerald-500 text-sm">schedule</span>
-                       <span className="text-[10px] font-black uppercase text-slate-400">18h / Hebdo</span>
+                    <div className="flex-1">
+                       <h4 className="text-xs font-black text-white uppercase tracking-tighter">Terminales Section A</h4>
+                       <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Mathematiques • 42 Élèves</p>
                     </div>
+                    <span className="material-symbols-outlined text-slate-700">arrow_forward</span>
+                 </Link>
+                 <div className="flex items-center gap-4 p-4 bg-slate-950/30 border border-slate-800/30 rounded-[2rem] opacity-50 grayscale">
+                    <div className="size-12 rounded-2xl bg-slate-900 flex items-center justify-center text-slate-700">
+                       <span className="material-symbols-outlined text-3xl font-black">lock</span>
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">Section NS3 - Verrouillée</p>
                  </div>
-              </div>
-           </div>
-        </section>
-
-        {/* Quick Actions Grid */}
-        <section className="space-y-6">
-           <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 px-1">Outils de travail</h3>
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { icon: 'video_call', label: 'Espace Visio', color: 'blue', desc: 'Démarrer un cours' },
-                { icon: 'assignment', label: 'Mes Devoirs', color: 'orange', desc: 'Gestion des exercices' },
-                { icon: 'quiz', label: 'Examens', color: 'emerald', desc: 'Création & Notation' },
-                { icon: 'publish', label: 'Résultats', color: 'purple', desc: 'Publier les notes' },
-              ].map((tool) => (
-                <button key={tool.label} className="flex flex-col items-center justify-center p-6 bg-slate-900/40 rounded-[2.5rem] border border-slate-800 hover:border-primary/50 transition-all shadow-xl group hover:bg-slate-900/80">
-                  <div className={`p-4 rounded-2xl mb-4 bg-slate-950 border border-slate-800 group-hover:scale-110 transition-transform`}>
-                    <span className={`material-symbols-outlined font-black text-${tool.color}-500 text-3xl`}>{tool.icon}</span>
-                  </div>
-                  <span className="text-[11px] font-black uppercase tracking-widest text-white mb-1">{tool.label}</span>
-                  <span className="text-[8px] font-bold text-slate-500 uppercase">{tool.desc}</span>
-                </button>
-              ))}
-           </div>
-        </section>
-
-        {/* Classes List */}
-        <section className="space-y-6">
-           <div className="flex items-center justify-between px-1">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Mes Classes de Référence</h3>
-              <Link to="/teacher-classes" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Voir l'emploi du temps</Link>
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link to="/teacher-classes" className="bg-slate-900/40 p-5 rounded-3xl border border-slate-800 flex items-center gap-5 hover:bg-slate-900 transition-all group border-b-4 border-b-orange-500/30">
-                  <div className="size-16 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center group-hover:text-orange-500 transition-colors">
-                     <span className="material-symbols-outlined font-black text-4xl">meeting_room</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-black text-white uppercase tracking-tight text-lg">Section NS4-A</h4>
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Groupe Terminale • 42 Étudiants</p>
-                  </div>
-                  <span className="material-symbols-outlined text-slate-700 font-black">chevron_right</span>
-              </Link>
-
-              <div className="bg-slate-900/40 p-5 rounded-3xl border border-slate-800 flex items-center gap-5 opacity-60 cursor-not-allowed">
-                  <div className="size-16 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center">
-                     <span className="material-symbols-outlined font-black text-4xl">history_edu</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-black text-white uppercase tracking-tight text-lg">Section NS3-B</h4>
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">En attente d'activation</p>
-                  </div>
               </div>
            </div>
         </section>
       </main>
 
-      {/* Persistent Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0c10]/80 backdrop-blur-2xl border-t border-white/5 px-4 pb-10 pt-4 shadow-2xl">
-        <div className="flex justify-around items-center max-w-4xl mx-auto w-full">
-          <Link className="flex flex-1 flex-col items-center gap-1.5 text-primary" to="/teacher-dashboard">
-            <span className="material-symbols-outlined fill-[1] text-2xl">roofing</span>
-            <p className="text-[9px] font-black uppercase tracking-widest">Accueil</p>
+      {/* Navigation Mobile Simplifiée */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0c10]/90 backdrop-blur-2xl border-t border-slate-800/50 px-4 pb-10 pt-4">
+        <div className="max-w-xl mx-auto flex justify-between">
+          <Link className="flex flex-col items-center gap-1.5 text-primary" to="/teacher-dashboard">
+            <span className="material-symbols-outlined fill-[1]">home_app_logo</span>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Home</span>
           </Link>
-          <Link className="flex flex-1 flex-col items-center gap-1.5 text-slate-500 hover:text-white transition-all" to="/teacher-classes">
-            <span className="material-symbols-outlined text-2xl">groups_3</span>
-            <p className="text-[9px] font-black uppercase tracking-widest">Classes</p>
+          <Link className="flex flex-col items-center gap-1.5 text-slate-600 hover:text-white" to="/teacher-classes">
+            <span className="material-symbols-outlined">groups_3</span>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Mes Groupes</span>
           </Link>
-          <Link className="flex flex-1 flex-col items-center gap-1.5 text-slate-500 hover:text-white transition-all" to="/messages">
-            <span className="material-symbols-outlined text-2xl">forum</span>
-            <p className="text-[9px] font-black uppercase tracking-widest">Chat</p>
-          </Link>
-          <Link className="flex flex-1 flex-col items-center gap-1.5 text-slate-500 hover:text-white transition-all" to="/profile">
-            <span className="material-symbols-outlined text-2xl">account_circle</span>
-            <p className="text-[9px] font-black uppercase tracking-widest">Profil</p>
+          <Link className="flex flex-col items-center gap-1.5 text-slate-600 hover:text-white" to="/profile">
+            <span className="material-symbols-outlined">person_pin</span>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Mon Espace</span>
           </Link>
         </div>
       </nav>
