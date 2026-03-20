@@ -12,57 +12,59 @@ const DEMO_USER = {
 export default function TeacherDashboard() {
   const [user, setUser] = useState<any>(null);
   const [branding, setBranding] = useState({ logo: null as string | null, name: 'Institution Univers' });
+  const [stats, setStats] = useState({ classes: 0, assignments: 0 });
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("TeacherDashboard: Mounted");
-    try {
-      const session = localStorage.getItem('user_session');
+    const session = localStorage.getItem('user_session');
 
-      if (!session) {
-        // Pas de session → mode démo enseignant (accès rapide depuis Welcome)
-        setUser(DEMO_USER);
-        return;
-      }
-
+    if (!session) {
+      setUser(DEMO_USER);
+    } else {
       const parsed = JSON.parse(session);
-
       if (parsed.role !== 'teacher') {
-        // Ce n'est pas un professeur, retour à l'accueil
         navigate('/');
         return;
       }
-
-      // Override avatar local si disponible
       const localAvatar = localStorage.getItem(`avatar_override_${parsed.id_user}`);
       if (localAvatar) parsed.avatar_url = localAvatar;
-
       setUser(parsed);
-    } catch (e) {
-      console.error("TeacherDashboard: Erreur session", e);
-      setUser(DEMO_USER);
+      fetchStats(parsed.id_user);
     }
 
-    // Fetch branding en arrière-plan (non-bloquant)
     const fetchBranding = async () => {
       try {
         const { data } = await supabase.from('school_settings').select('*').limit(1).single();
         if (data) setBranding({ logo: data.logo_url, name: data.school_name || 'Institution Univers' });
-      } catch (err) {
-        // ignore
-      }
+      } catch (err) { /* ignore */ }
     };
     fetchBranding();
   }, [navigate]);
 
-  // Écran de chargement très court — ne bloque plus l'affichage
+  async function fetchStats(teacherId: string) {
+    if (teacherId === 'prof.demo') return;
+    try {
+      const { count: classesCount } = await supabase
+        .from('courses')
+        .select('*', { count: 'exact', head: true })
+        .eq('teacher_id', teacherId);
+      
+      const { count: assignmentsCount } = await supabase
+        .from('assignments')
+        .select('*', { count: 'exact', head: true })
+        .eq('teacher_id', teacherId);
+
+      setStats({
+        classes: classesCount || 0,
+        assignments: assignmentsCount || 0
+      });
+    } catch (err) { /* ignore */ }
+  }
+
   if (!user) {
     return (
       <div className="bg-slate-950 min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <span className="material-symbols-outlined text-blue-500 text-5xl animate-spin">autorenew</span>
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Chargement...</p>
-        </div>
+        <span className="material-symbols-outlined text-blue-500 text-5xl animate-spin">autorenew</span>
       </div>
     );
   }
@@ -72,8 +74,6 @@ export default function TeacherDashboard() {
 
   return (
     <div className="bg-slate-950 font-display text-slate-100 min-h-screen flex flex-col">
-
-      {/* ── Header ── */}
       <header className="flex items-center justify-between p-4 bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-2xl">
         <div className="flex items-center gap-3">
           <div className="size-10 bg-white rounded-xl flex items-center justify-center overflow-hidden">
@@ -91,10 +91,7 @@ export default function TeacherDashboard() {
         </Link>
       </header>
 
-      {/* ── Contenu principal ── */}
       <main className="p-6 space-y-8 flex-1 pb-32">
-
-        {/* Salutation */}
         <section className="mt-4">
           <h2 className="text-2xl font-black text-white tracking-tighter">
             Bonjour, Prof. {user.full_name} 👋
@@ -104,21 +101,19 @@ export default function TeacherDashboard() {
           </p>
         </section>
 
-        {/* Statistiques rapides */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-3xl p-5 flex flex-col gap-1">
             <span className="material-symbols-outlined text-blue-400 text-3xl">groups</span>
-            <span className="text-2xl font-black text-white">—</span>
-            <span className="text-[9px] font-black uppercase tracking-widest text-blue-400">Classes</span>
+            <span className="text-2xl font-black text-white">{stats.classes}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-blue-400">Classes actives</span>
           </div>
           <div className="bg-orange-500/10 border border-orange-500/20 rounded-3xl p-5 flex flex-col gap-1">
             <span className="material-symbols-outlined text-orange-400 text-3xl">assignment</span>
-            <span className="text-2xl font-black text-white">—</span>
-            <span className="text-[9px] font-black uppercase tracking-widest text-orange-400">Devoirs</span>
+            <span className="text-2xl font-black text-white">{stats.assignments}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-orange-400">Devoirs postés</span>
           </div>
         </div>
 
-        {/* Accès rapides */}
         <section>
           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 px-1">Accès Rapides</h3>
           <div className="grid grid-cols-2 gap-4">
@@ -140,10 +135,8 @@ export default function TeacherDashboard() {
             </Link>
           </div>
         </section>
-
       </main>
 
-      {/* ── Barre de navigation ── */}
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 p-4 pb-10">
         <div className="flex justify-around items-center max-w-md mx-auto">
           <Link className="text-blue-500 flex flex-col items-center gap-1" to="/teacher-dashboard">
@@ -164,7 +157,6 @@ export default function TeacherDashboard() {
           </Link>
         </div>
       </nav>
-
     </div>
   );
 }

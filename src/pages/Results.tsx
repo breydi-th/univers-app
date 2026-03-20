@@ -1,64 +1,85 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 export default function Results() {
-  const subjects = [
-    { 
-      id: 1, 
-      name: 'Mathématiques', 
-      icon: 'functions', 
-      color: 'text-blue-600', 
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20', 
-      average: '16.5/20', 
-      lastGrade: '18/20', 
-      trend: '+5%', 
-      trendIcon: 'trending_up', 
-      trendColor: 'text-green-500' 
-    },
-    { 
-      id: 2, 
-      name: 'Physique', 
-      icon: 'biotech', 
-      color: 'text-orange-600', 
-      bgColor: 'bg-orange-50 dark:bg-orange-900/20', 
-      average: '14.2/20', 
-      lastGrade: '13/20', 
-      trend: '-2%', 
-      trendIcon: 'trending_down', 
-      trendColor: 'text-red-500' 
-    },
-    { 
-      id: 3, 
-      name: 'Chimie', 
-      icon: 'science', 
-      color: 'text-purple-600', 
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20', 
-      average: '15.0/20', 
-      lastGrade: '17/20', 
-      trend: '+1.2%', 
-      trendIcon: 'trending_up', 
-      trendColor: 'text-green-500' 
-    },
-    { 
-      id: 4, 
-      name: 'Français', 
-      icon: 'menu_book', 
-      color: 'text-emerald-600', 
-      bgColor: 'bg-emerald-50 dark:bg-emerald-900/20', 
-      average: '13.8/20', 
-      lastGrade: '14/20', 
-      trend: '0%', 
-      trendIcon: 'horizontal_rule', 
-      trendColor: 'text-slate-400' 
-    },
-  ];
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [stats, setStats] = useState({
+    avg: 0,
+    count: 0,
+    done: 0,
+    subjects: [] as any[]
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const session = localStorage.getItem('user_session');
+    if (!session) { navigate('/'); return; }
+    const parsed = JSON.parse(session);
+    setUser(parsed);
+    fetchStats(parsed);
+  }, []);
+
+  async function fetchStats(userData: any) {
+    try {
+      setLoading(true);
+      const userClass = userData.class_name || userData.class_id || '';
+      const lsCompleted = localStorage.getItem(`completed_assignments_${userData.id_user}`);
+      const completedIds: string[] = lsCompleted ? JSON.parse(lsCompleted) : [];
+
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('*')
+        .or(`class_id.eq.${userClass},class_id.eq.Toutes,class_id.eq.`);
+
+      if (!error && data) {
+        // Group by subject
+        const subjects: Record<string, { total: number, done: number }> = {};
+        data.forEach(asgn => {
+          const sub = asgn.title?.split(' ')[0] || 'Général';
+          if (!subjects[sub]) subjects[sub] = { total: 0, done: 0 };
+          subjects[sub].total++;
+          if (completedIds.includes(asgn.id)) subjects[sub].done++;
+        });
+
+        const subjectsList = Object.entries(subjects).map(([name, s], idx) => ({
+          id: idx,
+          name,
+          icon: name === 'Maths' ? 'functions' : name === 'Physique' ? 'biotech' : 'menu_book',
+          color: 'text-primary',
+          bgColor: 'bg-primary/10',
+          average: Math.round((s.done / s.total) * 100) + '% d\'achèvement',
+          lastGrade: s.done + '/' + s.total + ' remis',
+          trend: '+2%',
+          trendIcon: 'trending_up',
+          trendColor: 'text-green-500'
+        }));
+
+        const totalDone = completedIds.length;
+        const totalAsgn = data.length;
+        const avgGlobal = totalAsgn > 0 ? Math.round((totalDone / totalAsgn) * 100) : 0;
+
+        setStats({
+          avg: avgGlobal,
+          count: totalAsgn,
+          done: totalDone,
+          subjects: subjectsList
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const chartData = [
-    { month: 'Sep', height: 'h-[40%]', opacity: 'bg-primary/20' },
-    { month: 'Oct', height: 'h-[65%]', opacity: 'bg-primary/40' },
-    { month: 'Nov', height: 'h-[55%]', opacity: 'bg-primary/30' },
-    { month: 'Déc', height: 'h-[85%]', opacity: 'bg-primary', active: true },
-    { month: 'Jan', height: 'h-[70%]', opacity: 'bg-primary/50' },
+    { month: 'Sem 1', height: 'h-[40%]', opacity: 'bg-primary/20' },
+    { month: 'Sem 2', height: 'h-[65%]', opacity: 'bg-primary/40' },
+    { month: 'Sem 3', height: 'h-[55%]', opacity: 'bg-primary/30' },
+    { month: 'Sem 4', height: 'h-[85%]', opacity: 'bg-primary', active: true },
+    { month: 'Auj', height: `${stats.avg}%`, opacity: 'bg-primary', active: true },
   ];
 
   return (
@@ -80,16 +101,16 @@ export default function Results() {
         <section className="px-4 pt-6 pb-4">
           <div className="relative overflow-hidden rounded-2xl bg-primary p-6 text-white shadow-lg shadow-primary/20">
             <div className="relative z-10">
-              <h2 className="text-2xl font-bold">Résultats scolaires</h2>
-              <p className="mt-1 text-white/80 text-sm">Suivez vos notes et votre progression en temps réel.</p>
+              <h2 className="text-2xl font-bold">Performance Académique</h2>
+              <p className="mt-1 text-white/80 text-sm">Suivez vos travaux et votre régularité.</p>
               <div className="mt-6 flex items-end gap-4">
                 <div className="flex-1">
-                  <p className="text-xs uppercase tracking-wider text-white/70 font-medium">Moyenne Générale</p>
-                  <p className="text-3xl font-bold">15.5<span className="text-lg font-normal opacity-80">/20</span></p>
+                  <p className="text-xs uppercase tracking-wider text-white/70 font-medium">Taux de Devoirs Remis</p>
+                  <p className="text-3xl font-bold">{stats.avg}<span className="text-lg font-normal opacity-80">%</span></p>
                 </div>
                 <div className="bg-white/20 backdrop-blur-md rounded-lg px-3 py-1 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">trending_up</span>
-                  <span className="text-sm font-bold">+5%</span>
+                  <span className="material-symbols-outlined text-sm">assignment_turned_in</span>
+                  <span className="text-sm font-bold">{stats.done}/{stats.count}</span>
                 </div>
               </div>
             </div>
@@ -103,18 +124,15 @@ export default function Results() {
         <section className="px-4 py-4">
           <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-slate-800 dark:text-slate-200">Évolution Trimestrielle</h3>
-              <select className="bg-slate-50 dark:bg-slate-800 border-none text-xs font-semibold rounded-lg focus:ring-primary py-1 px-3 outline-none">
-                <option>Trimestre 1</option>
-                <option>Trimestre 2</option>
-                <option>Trimestre 3</option>
-              </select>
+              <h3 className="font-bold text-slate-800 dark:text-slate-200">Régularité mensuelle</h3>
             </div>
-            {/* Mockup Bar Chart */}
+            {/* Mockup Bar Chart with dynamic today bar */}
             <div className="flex items-end justify-between h-32 gap-2 px-2">
               {chartData.map((data, index) => (
                 <div key={index} className="flex flex-col items-center flex-1 gap-2">
-                  <div className={`w-full bg-slate-100 dark:bg-slate-800 rounded-t-md ${data.height} relative transition-all duration-500`}>
+                  <div className={`w-full bg-slate-100 dark:bg-slate-800 rounded-t-md ${data.height.includes('%') ? '' : data.height} relative transition-all duration-500`}
+                       style={data.height.includes('%') ? { height: data.height } : {}}
+                  >
                     <div className={`absolute inset-0 ${data.opacity} rounded-t-md h-full`}></div>
                   </div>
                   <span className={`text-[10px] font-medium uppercase ${data.active ? 'text-primary font-bold' : 'text-slate-400'}`}>
@@ -129,11 +147,14 @@ export default function Results() {
         {/* Subjects List */}
         <section className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-slate-800 dark:text-slate-200">Par Matière</h3>
-            <button className="text-primary text-sm font-semibold hover:underline">Voir tout</button>
+            <h3 className="font-bold text-slate-800 dark:text-slate-200">Activités par Matière</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {subjects.map((subject) => (
+            {stats.subjects.length === 0 ? (
+              <div className="col-span-full py-10 text-center text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl font-bold">
+                 Aucun résultat disponible pour le moment.
+              </div>
+            ) : stats.subjects.map((subject) => (
               <div key={subject.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
                 <div className={`w-12 h-12 rounded-xl ${subject.bgColor} flex items-center justify-center ${subject.color}`}>
                   <span className="material-symbols-outlined">{subject.icon}</span>
@@ -141,19 +162,15 @@ export default function Results() {
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <h4 className="font-bold text-slate-900 dark:text-slate-100">{subject.name}</h4>
-                    <div className={`flex items-center ${subject.trendColor} gap-0.5`}>
-                      <span className="material-symbols-outlined text-xs">{subject.trendIcon}</span>
-                      <span className="text-[10px] font-bold">{subject.trend}</span>
-                    </div>
                   </div>
                   <div className="mt-2 flex items-center gap-4">
                     <div>
-                      <p className="text-[10px] text-slate-400 font-medium uppercase">Moyenne</p>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase">Statut</p>
                       <p className="text-sm font-bold">{subject.average}</p>
                     </div>
                     <div className="h-6 w-px bg-slate-100 dark:bg-slate-800"></div>
                     <div>
-                      <p className="text-[10px] text-slate-400 font-medium uppercase">Dernière note</p>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase">Remis</p>
                       <p className="text-sm font-bold text-primary">{subject.lastGrade}</p>
                     </div>
                   </div>

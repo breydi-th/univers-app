@@ -15,12 +15,13 @@ export default function AdminDashboard() {
       const { count: studentCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
       const { count: teacherCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
       const { count: classCount } = await supabase.from('classes').select('*', { count: 'exact', head: true });
+      const { count: courseCount } = await supabase.from('courses').select('*', { count: 'exact', head: true });
       
       setStats({
         students: studentCount || 0,
         teachers: teacherCount || 0,
         classes: classCount || 0,
-        courses: 0
+        courses: courseCount || 0
       });
     } catch (e) {
       console.error("Error fetching stats:", e);

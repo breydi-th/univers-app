@@ -7,7 +7,7 @@ import Courses from './pages/Courses';
 import Results from './pages/Results';
 import Profile from './pages/Profile';
 import TeacherDashboard from './pages/TeacherDashboard';
-import TeacherCourses from './pages/TeacherCourses';
+import TeacherCourses from './pages/TeacherCourses.tsx';
 import TeacherAssignments from './pages/TeacherAssignments';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminAccountCreation from './pages/AdminAccountCreation';

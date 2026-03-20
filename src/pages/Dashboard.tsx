@@ -6,6 +6,8 @@ export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(true);
 
   useEffect(() => {
     const session = localStorage.getItem('user_session');
@@ -28,6 +30,7 @@ export default function Dashboard() {
     
     setUser(parsedUser);
     fetchBranding();
+    fetchAssignments(parsedUser);
   }, [navigate]);
 
   async function fetchBranding() {
@@ -41,6 +44,66 @@ export default function Dashboard() {
     }
   }
 
+  const [progress, setProgress] = useState<any[]>([]);
+
+  async function fetchAssignments(userData: any) {
+    try {
+      setLoadingAssignments(true);
+      const userClass = userData.class_name || userData.class_id || '';
+      
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('*')
+        .or(`class_id.eq.${userClass},class_id.eq.Toutes,class_id.eq.`)
+        .order('due_date', { ascending: true });
+
+      if (!error && data) {
+        // Calculate dynamic progress
+        const lsCompleted = localStorage.getItem(`completed_assignments_${userData.id_user}`);
+        const completedIds: string[] = lsCompleted ? JSON.parse(lsCompleted) : [];
+        
+        // Group by subject (first word of title for aesthetic)
+        const subjects: Record<string, { total: number, done: number }> = {};
+        data.forEach(asgn => {
+          let sub = asgn.title?.split(' ')[0] || 'Général';
+          sub = sub.replace(/[:.,]/g, ''); // Clean up common punctuation
+          if (!subjects[sub]) subjects[sub] = { total: 0, done: 0 };
+          subjects[sub].total++;
+          if (completedIds.includes(asgn.id)) subjects[sub].done++;
+        });
+
+        const progressMapped = Object.entries(subjects).map(([label, stats]) => {
+          const lowerLabel = label.toLowerCase();
+          let color = 'emerald';
+          if (lowerLabel.includes('math')) color = 'blue';
+          if (lowerLabel.includes('fran')) color = 'purple';
+          if (lowerLabel.includes('phys')) color = 'orange';
+          if (lowerLabel.includes('philo')) color = 'pink';
+          if (lowerLabel.includes('anglais') || lowerLabel.includes('esp')) color = 'yellow';
+
+          return {
+            label,
+            val: Math.round((stats.done / stats.total) * 100) + "%",
+            color,
+            w: Math.round((stats.done / stats.total) * 100) + "%"
+          };
+        });
+
+        setProgress(progressMapped.length > 0 ? progressMapped : [
+          { label: "Mathématiques", val: "0%", color: "blue", w: "0%" },
+          { label: "Français", val: "0%", color: "purple", w: "0%" },
+          { label: "Sciences", val: "0%", color: "emerald", w: "0%" },
+        ]);
+        
+        setAssignments(data.slice(0, 3)); // show only top 3
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingAssignments(false);
+    }
+  }
+
   if (!user) return null;
 
   return (
@@ -51,9 +114,9 @@ export default function Dashboard() {
           <div className="flex items-center gap-4 flex-1 min-w-0">
              <div className="size-12 shrink-0 rounded-2xl bg-white p-1.5 shadow-2xl border border-white/10 flex items-center justify-center overflow-hidden">
                 {logoUrl ? (
-                  <img src={logoUrl} className="w-full h-full object-contain" alt="Logo" />
+                   <img src={logoUrl} className="w-full h-full object-contain" alt="Logo" />
                 ) : (
-                  <span className="material-symbols-outlined text-primary text-3xl font-black">school</span>
+                   <span className="material-symbols-outlined text-primary text-3xl font-black">school</span>
                 )}
              </div>
              <div className="min-w-0">
@@ -100,17 +163,16 @@ export default function Dashboard() {
              </div>
              
              <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                {[
-                  { label: "Mathématiques", val: "15%", color: "blue", w: "15%" },
-                  { label: "Français", val: "40%", color: "purple", w: "40%" },
-                  { label: "Anglais", val: "10%", color: "emerald", w: "10%" },
-                ].map((item, idx) => (
+                {progress.map((item, idx) => (
                   <div key={idx} className="min-w-[180px] bg-slate-900/50 p-6 rounded-[2.2rem] border border-slate-800 shadow-xl group hover:border-primary/40 transition-all relative overflow-hidden">
                      <div className={`absolute bottom-0 left-0 h-1 bg-${item.color}-500/10 w-full`}></div>
                      <p className="text-[10px] text-slate-500 font-black uppercase mb-3 tracking-widest">{item.label}</p>
                      <p className="text-3xl font-black text-white mb-3 leading-none tracking-tighter">{item.val}</p>
                      <div className="w-full h-1.5 bg-slate-800/50 rounded-full overflow-hidden border border-white/5">
-                        <div className={`h-full bg-${item.color}-500 transition-all duration-1000`} style={{ width: item.w }}></div>
+                        <div className={`h-full transition-all duration-1000 ${
+                          item.color === 'blue' ? 'bg-blue-500' : 
+                          item.color === 'purple' ? 'bg-purple-500' : 'bg-emerald-500'
+                        }`} style={{ width: item.w }}></div>
                      </div>
                   </div>
                 ))}
@@ -118,19 +180,46 @@ export default function Dashboard() {
           </section>
 
           {/* Upcoming Assignments */}
-          <section className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+          <section className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 pb-10">
              <div className="flex items-center justify-between mb-6 px-1">
                 <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Devoirs & Cahiers</h2>
                 <Link to="/assignments" className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline">Accéder</Link>
              </div>
              
-             <div className="bg-slate-900/30 border-2 border-dashed border-slate-800/50 p-12 rounded-[3rem] text-center flex flex-col items-center group hover:bg-slate-900/50 transition-colors">
-                <div className="size-20 rounded-[2rem] bg-slate-800/50 flex items-center justify-center text-slate-700 mb-6 group-hover:bg-primary/20 group-hover:text-primary transition-all transform group-hover:scale-110 duration-500 border border-white/5 shadow-2xl shadow-primary/5">
-                   <span className="material-symbols-outlined text-4xl">history_edu</span>
-                </div>
-                <h3 className="text-white font-black tracking-tighter uppercase text-xl mb-2">Aucun devoir en attente</h3>
-                <p className="text-slate-500 text-xs font-bold max-w-[200px] leading-relaxed opacity-60">Tes professeurs n'ont pas encore publié de nouveaux devoirs.</p>
-             </div>
+             {loadingAssignments ? (
+               <div className="flex justify-center p-10">
+                 <span className="material-symbols-outlined animate-spin text-blue-500">sync</span>
+               </div>
+             ) : assignments.length === 0 ? (
+               <div className="bg-slate-900/30 border-2 border-dashed border-slate-800/50 p-12 rounded-[3rem] text-center flex flex-col items-center group hover:bg-slate-900/50 transition-colors">
+                  <div className="size-20 rounded-[2rem] bg-slate-800/50 flex items-center justify-center text-slate-700 mb-6 group-hover:bg-primary/20 group-hover:text-primary transition-all transform group-hover:scale-110 duration-500 border border-white/5 shadow-2xl shadow-primary/5">
+                     <span className="material-symbols-outlined text-4xl">history_edu</span>
+                  </div>
+                  <h3 className="text-white font-black tracking-tighter uppercase text-xl mb-2">Aucun devoir en attente</h3>
+                  <p className="text-slate-500 text-xs font-bold max-w-[200px] leading-relaxed opacity-60">Tes professeurs n'ont pas encore publié de nouveaux devoirs.</p>
+               </div>
+             ) : (
+               <div className="grid gap-4">
+                 {assignments.map((assignment: any) => (
+                   <Link 
+                     key={assignment.id} 
+                     to="/assignments"
+                     className="bg-slate-900 border border-slate-800 p-5 rounded-[2rem] flex items-center justify-between group hover:border-blue-500/30 transition-all shadow-xl"
+                   >
+                     <div className="flex items-center gap-4">
+                       <div className="size-12 rounded-2xl bg-slate-950 flex items-center justify-center text-blue-500 border border-slate-800 group-hover:scale-105 transition-transform">
+                          <span className="material-symbols-outlined">edit_square</span>
+                       </div>
+                       <div>
+                         <h3 className="font-bold text-white text-sm line-clamp-1">{assignment.title}</h3>
+                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">À rendre pour le {new Date(assignment.due_date).toLocaleDateString('fr-FR')}</p>
+                       </div>
+                     </div>
+                     <span className="material-symbols-outlined text-slate-700 group-hover:text-blue-500 transition-colors">arrow_forward</span>
+                   </Link>
+                 ))}
+               </div>
+             )}
           </section>
         </main>
 
