@@ -210,6 +210,10 @@ export default function TeacherAssignments() {
                 </div>
                 
                 <div className="flex gap-2 mt-4 sm:mt-0 w-full sm:w-auto justify-end border-t border-slate-800 sm:border-0 pt-4 sm:pt-0">
+                  <Link to={`/teacher-submissions/${assignment.id}`} className="flex items-center gap-1.5 px-3 py-2 bg-blue-500/10 text-blue-500 hover:text-white hover:bg-blue-600 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest">
+                    <span className="material-symbols-outlined text-sm">visibility</span>
+                    Remises
+                  </Link>
                   {assignment.file_url && (
                     <a href={assignment.file_url} target="_blank" rel="noreferrer" className="p-3 bg-orange-500/10 text-orange-500 hover:text-white hover:bg-orange-500 rounded-xl transition-colors">
                       <span className="material-symbols-outlined text-sm">attachment</span>

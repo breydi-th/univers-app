@@ -26,6 +26,8 @@ import AdminNotificationSettings from './pages/AdminNotificationSettings';
 import AdminNotifications from './pages/AdminNotifications';
 import AdminProfile from './pages/AdminProfile';
 
+import TeacherSubmissions from './pages/TeacherSubmissions';
+
 export default function App() {
   // Initialize theme from localStorage
   useEffect(() => {
@@ -45,6 +47,7 @@ export default function App() {
         <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
         <Route path="/teacher-courses" element={<TeacherCourses />} />
         <Route path="/teacher-assignments" element={<TeacherAssignments />} />
+        <Route path="/teacher-submissions/:id" element={<TeacherSubmissions />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-accounts" element={<AdminAccountCreation />} />
         <Route path="/admin-students" element={<AdminStudents />} />
