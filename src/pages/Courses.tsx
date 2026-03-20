@@ -5,17 +5,34 @@ import { supabase } from '../lib/supabase';
 export default function Courses() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userClass, setUserClass] = useState('');
 
-  const subjects = [
-    { id: 1, name: 'Maths', icon: 'calculate', active: true },
-    { id: 2, name: 'Physique', icon: 'science', active: false },
-    { id: 3, name: 'Chimie', icon: 'experiment', active: false },
-    { id: 4, name: 'Français', icon: 'menu_book', active: false },
-    { id: 5, name: 'Histoire', icon: 'history_edu', active: false },
-    { id: 6, name: 'Géo', icon: 'public', active: false },
-    { id: 7, name: 'Biologie', icon: 'biotech', active: false },
-    { id: 8, name: 'Géologie', icon: 'terrain', active: false },
+  const allSubjects = [
+    { id: 1, name: 'Maths', icon: 'calculate' },
+    { id: 2, name: 'Physique', icon: 'science' },
+    { id: 3, name: 'Chimie', icon: 'experiment' },
+    { id: 4, name: 'Français', icon: 'menu_book' },
+    { id: 5, name: 'Histoire', icon: 'history_edu' },
+    { id: 6, name: 'Géo', icon: 'public' },
+    { id: 7, name: 'Biologie', icon: 'biotech' },
+    { id: 8, name: 'Géologie', icon: 'terrain' },
+    { id: 9, name: 'Créole', icon: 'translate' },
+    { id: 10, name: 'Anglais', icon: 'language' },
+    { id: 11, name: 'Espagnol', icon: 'language' },
+    { id: 12, name: 'Art & Musique', icon: 'palette' },
+    { id: 13, name: 'Économie', icon: 'trending_up' },
+    { id: 14, name: 'Philosophie', icon: 'psychology' },
+    { id: 15, name: 'Informatique', icon: 'computer' },
   ];
+
+  // Logic to filter subjects based on class level
+  const filteredSubjects = allSubjects.filter(subject => {
+    if (subject.name === 'Philosophie') {
+      // Show philosophy only for NS4
+      return userClass.toUpperCase().includes('NS4');
+    }
+    return true;
+  });
 
   useEffect(() => {
     fetchCourses();
@@ -28,7 +45,8 @@ export default function Courses() {
       if (!sessionStr) return;
       const user = JSON.parse(sessionStr);
 
-      const userClass = user.class_name || user.class_id || '';
+      const userClassVal = user.class_name || user.class_id || '';
+      setUserClass(userClassVal);
 
       const { data, error } = await supabase
         .from('courses')
@@ -36,7 +54,7 @@ export default function Courses() {
           *,
           profiles!courses_teacher_id_fkey(first_name, last_name)
         `)
-        .or(`class_id.eq.${userClass},class_id.eq.Toutes,class_id.eq.`)
+        .or(`class_id.eq.${userClassVal},class_id.eq.Toutes,class_id.eq.`)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -50,6 +68,8 @@ export default function Courses() {
       setLoading(false);
     }
   }
+
+  const [activeSubject, setActiveSubject] = useState(1);
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display">
@@ -77,12 +97,16 @@ export default function Courses() {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Matières</h2>
           </div>
           <div className="flex gap-3 px-6 overflow-x-auto hide-scrollbar pb-2">
-            {subjects.map((subject) => (
-              <div key={subject.id} className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group">
-                <div className={`flex size-14 items-center justify-center rounded-2xl transition-all ${subject.active ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-slate-200'}`}>
+            {filteredSubjects.map((subject) => (
+              <div 
+                key={subject.id} 
+                onClick={() => setActiveSubject(subject.id)}
+                className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group"
+              >
+                <div className={`flex size-14 items-center justify-center rounded-2xl transition-all ${activeSubject === subject.id ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-slate-200'}`}>
                   <span className="material-symbols-outlined">{subject.icon}</span>
                 </div>
-                <p className={`text-xs font-medium ${subject.active ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}`}>{subject.name}</p>
+                <p className={`text-[10px] sm:text-xs font-medium whitespace-nowrap ${activeSubject === subject.id ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}`}>{subject.name}</p>
               </div>
             ))}
           </div>
